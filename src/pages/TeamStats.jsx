@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Search, TrendingUp, Trophy, Target, SlidersHorizontal } from "lucide-react";
@@ -38,7 +38,8 @@ export default function TeamStatsPage() {
   const [selectedStats, setSelectedStats] = useState(['pts', 'reb', 'ast']);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState(() => {
-    return localStorage.getItem('selectedLeague') || 'leumit';
+    const stored = localStorage.getItem('selectedLeague');
+    return stored ? parseInt(stored) : null;
   });
 
   useEffect(() => {
@@ -49,28 +50,72 @@ export default function TeamStatsPage() {
     return () => window.removeEventListener('leagueChanged', handleLeagueChange);
   }, []);
 
+  // Fetch team averages
   const { data: teamAverages, isLoading: teamAvgLoading } = useQuery({
     queryKey: ['teamAverages', selectedLeague],
-    queryFn: () => base44.entities.TeamAverages.filter({ league_id: selectedLeague }),
+    queryFn: async () => {
+      if (!selectedLeague) return [];
+      const { data, error } = await supabase
+        .from('team_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
+    enabled: !!selectedLeague,
   });
 
+  // Fetch opponent averages
   const { data: opponentAverages, isLoading: oppAvgLoading } = useQuery({
     queryKey: ['opponentAverages', selectedLeague],
-    queryFn: () => base44.entities.OpponentAverages.filter({ league_id: selectedLeague }),
+    queryFn: async () => {
+      if (!selectedLeague) return [];
+      const { data, error } = await supabase
+        .from('opponent_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
+    enabled: !!selectedLeague,
   });
 
+  // Fetch games
   const { data: games } = useQuery({
     queryKey: ['games', selectedLeague],
-    queryFn: () => base44.entities.Game.filter({ league_id: selectedLeague }),
+    queryFn: async () => {
+      if (!selectedLeague) return [];
+      const { data, error } = await supabase
+        .from('games')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
+    enabled: !!selectedLeague,
   });
 
-  const { data: teamColors } = useQuery({
-    queryKey: ['teamColors'],
-    queryFn: () => base44.entities.TeamColors.list(),
+  // Fetch teams for colors
+  const { data: teams } = useQuery({
+    queryKey: ['teams', selectedLeague],
+    queryFn: async () => {
+      if (!selectedLeague) return [];
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
+    enabled: !!selectedLeague,
   });
 
   const isLoading = teamAvgLoading || oppAvgLoading;
@@ -89,15 +134,15 @@ export default function TeamStatsPage() {
       }
     });
 
-    const colors = teamColors.find(c => c.team_name === team.team);
+    const teamInfo = teams.find(t => t.team_name === team.team);
 
     return {
       ...team,
       ...oppData,
       wins,
       losses: completedGames.length - wins,
-      bgColor: colors?.bg_color || 'var(--primary)',
-      textColor: colors?.text_color || '#FFFFFF'
+      bgColor: teamInfo?.bg_color || 'var(--primary)',
+      textColor: teamInfo?.text_color || '#FFFFFF'
     };
   });
 
@@ -129,6 +174,18 @@ export default function TeamStatsPage() {
       }
     }
   };
+
+  if (!selectedLeague) {
+    return (
+      <div className="min-h-screen p-3 md:p-6" style={{ backgroundColor: 'var(--background)' }}>
+        <div className="max-w-6xl mx-auto text-center py-12">
+          <h2 className="text-lg font-bold mb-3" style={{ color: 'var(--primary)' }}>
+            אנא בחר ליגה מהתפריט
+          </h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-3 md:p-6" style={{ backgroundColor: 'var(--background)' }}>
@@ -164,7 +221,7 @@ export default function TeamStatsPage() {
                 </SelectContent>
               </Select>
 
-              <Dialog open={isDialogOpen} onValueChange={setIsDialogOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" size="sm" className="h-9 text-xs">
                     <SlidersHorizontal className="w-3 h-3 ml-1" />
