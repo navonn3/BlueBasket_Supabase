@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Search, Users } from "lucide-react";
@@ -23,83 +23,143 @@ export default function TeamsPage() {
     return () => window.removeEventListener('leagueChanged', handleLeagueChange);
   }, []);
 
+  // Fetch teams
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['teams', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Team.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch players
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['players', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Player.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch games
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Game.filter({ league_id: selectedLeague }, 'date');
+      const { data, error } = await supabase
+        .from('games')
+        .select('*')
+        .eq('league_id', selectedLeague)
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch team averages
   const { data: teamAverages, isLoading: teamAvgLoading } = useQuery({
     queryKey: ['teamAverages', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.TeamAverages.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('team_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch opponent averages
   const { data: opponentAverages, isLoading: oppAvgLoading } = useQuery({
     queryKey: ['opponentAverages', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.OpponentAverages.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('opponent_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch current user
   const { data: user } = useQuery({
     queryKey: ['user'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
   });
 
+  // Fetch favorites
   const { data: favorites, isLoading: favoritesLoading } = useQuery({
     queryKey: ['favorites', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return base44.entities.Favorite.filter({ user_email: user.email, item_type: 'team' });
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('*')
+        .eq('user_email', user.email)
+        .eq('item_type', 'team');
+      
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!user?.email,
     initialData: [],
   });
 
+  // Toggle favorite mutation
   const toggleFavoriteMutation = useMutation({
     mutationFn: async ({ teamName, isFavorite }) => {
       if (isFavorite) {
         const fav = favorites.find(f => f.item_id === teamName);
-        if (fav) await base44.entities.Favorite.delete(fav.id);
+        if (fav) {
+          const { error } = await supabase
+            .from('favorites')
+            .delete()
+            .eq('id', fav.id);
+          
+          if (error) throw error;
+        }
       } else {
-        await base44.entities.Favorite.create({
-          user_email: user.email,
-          item_type: 'team',
-          item_id: teamName,
-          item_name: teamName
-        });
+        const { error } = await supabase
+          .from('favorites')
+          .insert({
+            user_email: user.email,
+            item_type: 'team',
+            item_id: teamName,
+            item_name: teamName
+          });
+        
+        if (error) throw error;
       }
     },
     onSuccess: () => {
