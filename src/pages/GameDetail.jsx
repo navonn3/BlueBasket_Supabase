@@ -705,7 +705,14 @@ function PercentItem({ label, value, pct }) {
 function PlayerGameCard({ player, isExpanded, onToggle, hasGameEnded, teamColors, leagueId }) {
   const { data: seasonHistory } = useQuery({
     queryKey: ['seasonHistory', player.player_id],
-    queryFn: () => base44.entities.PlayerSeasonHistory.filter({ player_id: player.player_id }),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('player_season_history')
+        .select('*')
+        .eq('player_id', player.player_id);
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
     enabled: isExpanded && !!player.player_id
   });
