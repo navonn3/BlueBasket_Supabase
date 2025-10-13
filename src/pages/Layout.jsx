@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { Users, Calendar, Shield, BarChart3, Settings, AlertTriangle, Heart, GitCompare, Trophy, TrendingUp } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import {
   Sidebar,
@@ -106,7 +106,12 @@ export default function Layout({ children, currentPageName }) {
 
   const { data: leagues } = useQuery({
     queryKey: ['leagues'],
-    queryFn: () => base44.entities.League.list(),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('leagues')
+        .select('*');
+      return data || [];
+    },
     initialData: []
   });
 
