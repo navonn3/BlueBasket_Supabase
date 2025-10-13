@@ -1,5 +1,5 @@
 import React from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,23 +12,42 @@ export default function FavoritesPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  // Fetch current user
   const { data: user } = useQuery({
     queryKey: ['user'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
   });
 
+  // Fetch favorites
   const { data: favorites, isLoading } = useQuery({
     queryKey: ['favorites', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return base44.entities.Favorite.filter({ user_email: user.email });
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('*')
+        .eq('user_email', user.email);
+      
+      if (error) throw error;
+      return data || [];
     },
     enabled: !!user?.email,
     initialData: [],
   });
 
+  // Remove favorite mutation
   const removeFavoriteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Favorite.delete(id),
+    mutationFn: async (id) => {
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['favorites']);
     }
