@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,8 @@ import { Trophy, TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export default function StandingsPage() {
   const [selectedLeague, setSelectedLeague] = useState(() => {
-    return localStorage.getItem('selectedLeague') || 'leumit';
+    const stored = localStorage.getItem('selectedLeague');
+    return stored ? parseInt(stored) : null;
   });
 
   useEffect(() => {
@@ -18,16 +19,38 @@ export default function StandingsPage() {
     return () => window.removeEventListener('leagueChanged', handleLeagueChange);
   }, []);
 
+  // Fetch games
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games', selectedLeague],
-    queryFn: () => base44.entities.Game.filter({ league_id: selectedLeague }),
+    queryFn: async () => {
+      if (!selectedLeague) return [];
+      const { data, error } = await supabase
+        .from('games')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
+    enabled: !!selectedLeague,
   });
 
+  // Fetch teams
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['teams', selectedLeague],
-    queryFn: () => base44.entities.Team.filter({ league_id: selectedLeague }),
+    queryFn: async () => {
+      if (!selectedLeague) return [];
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
+    enabled: !!selectedLeague,
   });
 
   const isLoading = gamesLoading || teamsLoading;
@@ -111,6 +134,18 @@ export default function StandingsPage() {
   };
 
   const standings = calculateStandings();
+
+  if (!selectedLeague) {
+    return (
+      <div className="min-h-screen p-3 md:p-6" style={{ backgroundColor: 'var(--background)' }}>
+        <div className="max-w-5xl mx-auto text-center py-12">
+          <h2 className="text-lg font-bold mb-3" style={{ color: 'var(--primary)' }}>
+            אנא בחר ליגה מהתפריט
+          </h2>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-3 md:p-6" style={{ backgroundColor: 'var(--background)' }}>
