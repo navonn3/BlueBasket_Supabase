@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Calendar, Clock, MapPin, TrendingUp, Trophy, ChevronDown, ChevronUp, FileDown, Shield, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,91 +19,156 @@ export default function GameDetailPage() {
   const [expandedPlayer, setExpandedPlayer] = useState(null);
   const [showPDFMenu, setShowPDFMenu] = useState(false);
 
+  // --- GAMES ---
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games'],
-    queryFn: () => base44.entities.Game.list('date'),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('games')
+        .select('*')
+        .order('date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
     initialData: []
   });
 
   const game = games.find((g) => g.gameid === gameId || g.id === gameId);
 
+  // --- PLAYERS ---
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['players', game?.league_id],
     queryFn: async () => {
       if (!game?.league_id) return [];
-      return base44.entities.Player.filter({ league_id: game.league_id });
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('league_id', game.league_id);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!game?.league_id
   });
 
+  // --- PLAYER AVERAGES ---
   const { data: playerAverages, isLoading: avgLoading } = useQuery({
     queryKey: ['playerAverages', game?.league_id],
     queryFn: async () => {
       if (!game?.league_id) return [];
-      return base44.entities.PlayerAverages.filter({ league_id: game.league_id });
+      const { data, error } = await supabase
+        .from('player_averages')
+        .select('*')
+        .eq('league_id', game.league_id);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!game?.league_id
   });
 
+  // --- GAME PLAYER STATS ---
   const { data: gamePlayerStats, isLoading: gameStatsLoading } = useQuery({
     queryKey: ['gamePlayerStats', game?.gameid],
     queryFn: async () => {
       if (!game?.gameid) return [];
-      return base44.entities.GamePlayerStats.filter({ game_id: game.gameid });
+      const { data, error } = await supabase
+        .from('game_player_stats')
+        .select('*')
+        .eq('game_id', game.gameid);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!game?.gameid
   });
 
+  // --- GAME TEAM STATS ---
   const { data: gameTeamStats, isLoading: teamStatsLoading } = useQuery({
     queryKey: ['gameTeamStats', game?.gameid],
     queryFn: async () => {
       if (!game?.gameid) return [];
-      return base44.entities.GameTeamStats.filter({ game_id: game.gameid });
+      const { data, error } = await supabase
+        .from('game_team_stats')
+        .select('*')
+        .eq('game_id', game.gameid);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!game?.gameid
   });
 
+  // --- TEAM AVERAGES ---
   const { data: teamAverages, isLoading: teamAvgLoading } = useQuery({
     queryKey: ['teamAverages', game?.league_id],
     queryFn: async () => {
       if (!game?.league_id) return [];
-      return base44.entities.TeamAverages.filter({ league_id: game.league_id });
+      const { data, error } = await supabase
+        .from('team_averages')
+        .select('*')
+        .eq('league_id', game.league_id);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!game?.league_id
   });
 
+  // --- OPPONENT AVERAGES ---
   const { data: opponentAverages, isLoading: oppAvgLoading } = useQuery({
     queryKey: ['opponentAverages', game?.league_id],
     queryFn: async () => {
       if (!game?.league_id) return [];
-      return base44.entities.OpponentAverages.filter({ league_id: game.league_id });
+      const { data, error } = await supabase
+        .from('opponent_averages')
+        .select('*')
+        .eq('league_id', game.league_id);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!game?.league_id
   });
 
+  // --- GAME QUARTERS ---
   const { data: gameQuarters, isLoading: quartersLoading } = useQuery({
     queryKey: ['gameQuarters', game?.gameid],
     queryFn: async () => {
       if (!game?.gameid) return [];
-      return base44.entities.GameQuarters.filter({ game_id: game.gameid });
+      const { data, error } = await supabase
+        .from('game_quarters')
+        .select('*')
+        .eq('game_id', game.gameid);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!game?.gameid
   });
 
+  // --- TEAMS ---
   const { data: teams } = useQuery({
     queryKey: ['teams'],
-    queryFn: () => base44.entities.Team.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: []
   });
 
-  const isLoading = gamesLoading || playersLoading || avgLoading || gameStatsLoading || teamStatsLoading || teamAvgLoading || oppAvgLoading || quartersLoading;
+  const isLoading =
+    gamesLoading ||
+    playersLoading ||
+    avgLoading ||
+    gameStatsLoading ||
+    teamStatsLoading ||
+    teamAvgLoading ||
+    oppAvgLoading ||
+    quartersLoading;
 
   const formatGameDate = (dateStr) => {
     if (!dateStr) return null;
@@ -128,8 +192,8 @@ export default function GameDetailPage() {
             <div className="h-48 bg-white rounded-lg animate-pulse" />
           </div>
         </div>
-      </div>);
-
+      </div>
+    );
   }
 
   if (!game) {
@@ -144,9 +208,10 @@ export default function GameDetailPage() {
             חזרה ללוח משחקים
           </Button>
         </div>
-      </div>);
-
+      </div>
+    );
   }
+
 
   const hasScore = game.home_score !== null && game.home_score !== undefined;
 
