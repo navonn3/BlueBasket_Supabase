@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -28,28 +28,42 @@ export default function GamesPage() {
     window.addEventListener('leagueChanged', handleLeagueChange);
     return () => window.removeEventListener('leagueChanged', handleLeagueChange);
   }, []);
-
+  
   const { data: games, isLoading } = useQuery({
     queryKey: ['games', selectedLeague],
-    queryFn: () => base44.entities.Game.filter({ league_id: selectedLeague }, 'date'),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('games')
+        .select('*')
+        .eq('league_id', selectedLeague)
+        .order('date', { ascending: false });
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: user } = useQuery({
     queryKey: ['user'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
   });
-
+  
   const { data: favorites, isLoading: favoritesLoading } = useQuery({
     queryKey: ['favorites', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return base44.entities.Favorite.filter({ user_email: user.email, item_type: 'game' });
+      const { data } = await supabase
+        .from('favorites')
+        .select('*')
+        .eq('user_email', user.email)
+        .eq('item_type', 'game');
+      return data || [];
     },
     enabled: !!user?.email,
     initialData: [],
   });
-
   const gamesWithDetails = games.map(game => {
     // Determine the unique identifier for the game, preferring 'gameid' if it exists.
     const gameIdentifier = game.gameid || game.id;
@@ -64,18 +78,18 @@ export default function GamesPage() {
   });
 
   const toggleFavoriteMutation = useMutation({
-    mutationFn: async ({ game, isFavorite }) => {
-      // Use the determined game identifier for favorite operations
-      const gameIdentifier = game.gameid || game.id;
+    mutationFn: async ({ gameId, gameName, isFavorite }) => {
       if (isFavorite) {
-        const fav = favorites.find(f => f.item_id === gameIdentifier);
-        if (fav) await base44.entities.Favorite.delete(fav.id);
+        const fav = favorites.find(f => f.item_id === gameId);
+        if (fav) {
+          await supabase.from('favorites').delete().eq('id', fav.id);
+        }
       } else {
-        await base44.entities.Favorite.create({
+        await supabase.from('favorites').insert({
           user_email: user.email,
           item_type: 'game',
-          item_id: gameIdentifier,
-          item_name: `${game.home_team} נגד ${game.away_team}` // Construct item_name from game object
+          item_id: gameId,
+          item_name: gameName
         });
       }
     },
