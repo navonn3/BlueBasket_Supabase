@@ -33,39 +33,61 @@ export default function PlayersPage() {
   }, []);
 
   const { data: players, isLoading: playersLoading } = useQuery({
-    queryKey: ['players', selectedLeague],
-    queryFn: () => base44.entities.Player.filter({ league_id: selectedLeague }),
-    initialData: [],
-  });
+  queryKey: ['players', selectedLeague],
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('players')
+      .select('*')
+      .eq('league_id', selectedLeague);
+    return data || [];
+  },
+  initialData: [],
+});
 
   const { data: playerAverages, isLoading: averagesLoading } = useQuery({
     queryKey: ['playerAverages', selectedLeague],
-    queryFn: () => base44.entities.PlayerAverages.filter({ league_id: selectedLeague }),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('player_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: user } = useQuery({
     queryKey: ['user'],
-    queryFn: () => base44.auth.me(),
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    },
   });
-
+  
   const { data: favorites, isLoading: favoritesLoading } = useQuery({
     queryKey: ['favorites', user?.email],
     queryFn: async () => {
       if (!user?.email) return [];
-      return base44.entities.Favorite.filter({ user_email: user.email, item_type: 'player' });
+      const { data } = await supabase
+        .from('favorites')
+        .select('*')
+        .eq('user_email', user.email)
+        .eq('item_type', 'player');
+      return data || [];
     },
     enabled: !!user?.email,
     initialData: [],
   });
-
+  
   const toggleFavoriteMutation = useMutation({
     mutationFn: async ({ playerId, playerName, isFavorite }) => {
       if (isFavorite) {
         const fav = favorites.find(f => f.item_id === playerId);
-        if (fav) await base44.entities.Favorite.delete(fav.id);
+        if (fav) {
+          await supabase.from('favorites').delete().eq('id', fav.id);
+        }
       } else {
-        await base44.entities.Favorite.create({
+        await supabase.from('favorites').insert({
           user_email: user.email,
           item_type: 'player',
           item_id: playerId,
