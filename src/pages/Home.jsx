@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -29,69 +28,120 @@ export default function HomePage() {
     return () => window.removeEventListener('leagueChanged', handleLeagueChange);
   }, []);
 
+  // Fetch games
   const { data: games } = useQuery({
     queryKey: ['games', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Game.filter({ league_id: selectedLeague }, 'date');
+      const { data, error } = await supabase
+        .from('games')
+        .select('*')
+        .eq('league_id', selectedLeague)
+        .order('date', { ascending: true });
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
-  const { data: teams, isLoading: isLoadingTeams } = useQuery({ // Added isLoading for teams
+  // Fetch teams
+  const { data: teams, isLoading: isLoadingTeams } = useQuery({
     queryKey: ['teams', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Team.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch players
   const { data: players } = useQuery({
     queryKey: ['players', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Player.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch player averages
   const { data: playerAverages } = useQuery({
     queryKey: ['playerAverages', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.PlayerAverages.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('player_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch team averages
   const { data: teamAverages } = useQuery({
     queryKey: ['teamAverages', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.TeamAverages.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('team_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch game player stats
   const { data: gamePlayerStats } = useQuery({
     queryKey: ['gamePlayerStats', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.GamePlayerStats.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('game_player_stats')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // Fetch leagues
   const { data: leagues } = useQuery({
     queryKey: ['leagues'],
-    queryFn: () => base44.entities.League.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('leagues')
+        .select('*');
+      
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
