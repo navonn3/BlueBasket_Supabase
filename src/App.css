@@ -47,7 +47,7 @@ main {
 
   main > div {
     max-width: 1200px;       /* גבול רוחב נוח */
-    width: 70%;
+    width: 100%;
     transform: translateX(180px); /* מזיז את התוכן מעט שמאלה — לכיוון מרכז השטח הפנוי */
   }
 }
@@ -74,6 +74,7 @@ body {
   color: #111;
   font-family: "Rubik", "Assistant", sans-serif;
 }
+
 
 
 
