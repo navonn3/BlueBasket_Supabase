@@ -236,8 +236,8 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                     <h5 className="text-[10px] font-semibold text-gray-600 mb-1.5">היסטוריית קבוצות</h5>
                     <div className="space-y-1">
                       {sortedHistory.map((row, idx) => (
-                        <div key={idx} className="flex items-start gap-3 py-1.5 border-b border-gray-100 last:border-0">
-                          <span className="text-[9px] text-gray-500 font-medium flex-shrink-0 w-14">{row.season}</span>
+                        <div key={idx} className="flex items-start gap-4 py-1.5 border-b border-gray-100 last:border-0">
+                          <span className="text-[9px] text-gray-500 font-medium flex-shrink-0 w-12">{row.season}</span>
                           <span className="text-[10px] font-semibold flex-1 text-right" style={{ color: 'var(--primary)' }}>
                             {row.team_name}   <span className="text-[9px] text-gray-500">({row.league_name || 'לא ידוע'})</span>
                           </span>
