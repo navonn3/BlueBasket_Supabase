@@ -655,7 +655,7 @@ export default function HomePage() {
                     <div 
                       key={game.id}
                       className="flex items-center gap-2 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors cursor-pointer"
-                      onClick={() => navigate(createPageUrl("GameDetail") + `?id=${game.gameid || game.id}`)}
+                      onClick={() => navigate(createPageUrl("GameDetail") + `?id=${game.gameid || game.game_id}`)}
                     >
                       <div className="w-12 text-xs text-gray-600 text-center">
                         {getDayName(game.date)}
