@@ -318,7 +318,7 @@ export default function GameDetailPage() {
 
   const handleDownloadPDF = (e, type) => {
     e.preventDefault();
-    window.open(createPageUrl("GameDayPDF") + `?id=${game.id}&type=${type}`, '_blank');
+    window.open(createPageUrl("GameDayPDF") + `?id=${game.game_id}&type=${type}`, '_blank');
     setShowPDFMenu(false);
   };
 
