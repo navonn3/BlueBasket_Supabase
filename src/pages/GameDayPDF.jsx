@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Loader } from "lucide-react";
 
@@ -13,33 +13,54 @@ export default function GameDayPDFPage() {
 
   const { data: games } = useQuery({
     queryKey: ['games'],
-    queryFn: () => base44.entities.Game.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('games').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: players } = useQuery({
     queryKey: ['players'],
-    queryFn: () => base44.entities.Player.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('players').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: playerAverages } = useQuery({
     queryKey: ['playerAverages'],
-    queryFn: () => base44.entities.PlayerAverages.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('player_averages').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: gamePlayerStats } = useQuery({
     queryKey: ['gamePlayerStats'],
-    queryFn: () => base44.entities.GamePlayerStats.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('game_player_stats').select('*');
+      if (error) throw error;
+      return data || [];
+    },
+    initialData: [],
+  });
+  
+  const { data: teams } = useQuery({
+    queryKey: ['teams'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('teams').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
-  const { data: teams } = useQuery({
-    queryKey: ['teams'],
-    queryFn: () => base44.entities.Team.list(),
-    initialData: [],
-  });
 
   const game = games.find(g => g.id === gameId || g.gameid === gameId || g.code === gameId);
 
