@@ -1,0 +1,12 @@
+/* 🎯 יישור התוכן למרכז במסכי מחשב בלבד */
+@media (min-width: 1024px) {
+  main {
+    display: flex;
+    justify-content: center;
+  }
+
+  main > div {
+    max-width: 1200px;
+    width: 100%;
+  }
+}
