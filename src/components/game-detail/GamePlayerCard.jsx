@@ -61,15 +61,15 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
     }
   };
 
-  // עיבוד היסטוריה: סדר יורד לפי עונה וליגה לכל שורה
-  // ניקוי וריכוז נתונים לפי season, team_name, league_name
-  const sortedHistory = [...seasonHistory]
-    .filter((item) => item.season && item.team_name)
-    .sort((a, b) => {
-      // פיצול העונה ("2022-23" או "2021/22") לשנה
-      const getYear = (season) => parseInt(season.split(/[-/]/)[0]);
-      return getYear(b.season) - getYear(a.season); // מהחדש לישן
-    });
+  // עיבוד היסטוריה: סדר יורד לפי עונה
+  const sortedHistory = seasonHistory
+    ? [...seasonHistory]
+        .filter((item) => item.season && item.team_name)
+        .sort((a, b) => {
+          const getYear = (season) => parseInt(season.split(/[-/]/)[0]);
+          return getYear(b.season) - getYear(a.season);
+        })
+    : [];
 
   return (
     <Card
@@ -115,7 +115,7 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
               {showGameStats && topGameStats && (
                 <div className="flex gap-1">
                   {topGameStats.map((stat, idx) => (
-                    <Badge key={idx} variant="outline" className="text-[9px] px-1.5 py-0.5 text-center">
+                    <Badge key={idx} variant="outline" className="text-[9px] px-1.5 py-0.5">
                       {stat.value || 0} {stat.label}
                     </Badge>
                   ))}
@@ -140,10 +140,10 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
               className="border-t border-gray-200"
             >
               <div className="p-3 bg-gradient-to-b from-gray-50 to-white space-y-3">
-                {/* סטטיסטיקות המשחק ובממוצע העונה: קווי grid מרכזיים */}
+                {/* סטטיסטיקות המשחק */}
                 {gameStats && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-600 mb-2 text-center">ביצועים במשחק</h5>
+                    <h5 className="text-[10px] font-semibold text-gray-600 mb-1.5">ביצועים במשחק</h5>
                     <div className="grid grid-cols-4 gap-1.5 justify-items-center">
                       <StatBox label="נק׳" value={gameStats.pts} />
                       <StatBox label="ריב׳" value={gameStats.reb} />
@@ -158,32 +158,31 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                     </div>
                   </div>
                 )}
+
+                {/* ממוצעי העונה */}
                 {seasonStats && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-600 mb-2 text-center">ממוצעים העונה</h5>
+                    <h5 className="text-[10px] font-semibold text-gray-600 mb-1.5">ממוצעי העונה</h5>
                     <div className="grid grid-cols-4 gap-1.5 justify-items-center">
-                      <StatBox label="נק׳" value={seasonStats.pts} rank={seasonStats.pts_rank} />
-                      <StatBox label="ריב׳" value={seasonStats.reb} rank={seasonStats.reb_rank} />
-                      <StatBox label="אס׳" value={seasonStats.ast} rank={seasonStats.ast_rank} />
-                      <StatBox label="דק׳" value={seasonStats.min} suffix="'" />
+                      <StatBox label="דק׳ (MIN)" value={seasonStats.min} suffix="'" gradient="from-purple-50 to-purple-100" textColor="text-purple-700" />
+                      <StatBox label="נק' (PTS)" value={seasonStats.pts} rank={seasonStats.pts_rank} gradient="from-orange-50 to-orange-100" accentColor />
+                      <StatBox label="ריב' (REB)" value={seasonStats.reb} rank={seasonStats.reb_rank} gradient="from-blue-50 to-blue-100" textColor="text-blue-700" />
+                      <StatBox label="אס' (AST)" value={seasonStats.ast} rank={seasonStats.ast_rank} gradient="from-green-50 to-green-100" textColor="text-green-700" />
                     </div>
                   </div>
                 )}
-                {/* טבלת היסטוריה: שנה|קבוצה + ליגה */}
+
+                {/* היסטוריית קבוצות */}
                 {sortedHistory.length > 0 && (
                   <div>
-                    <h5 className="text-xs font-semibold text-gray-600 mb-2 text-center">היסטוריית קבוצות</h5>
-                    <div>
-                      <div className="grid grid-cols-2 gap-2 font-bold text-[11px] py-1 border-b border-gray-300 text-gray-700">
-                        <div className="text-right">שנה</div>
-                        <div className="text-right">קבוצה (ליגה)</div>
-                      </div>
+                    <h5 className="text-[10px] font-semibold text-gray-600 mb-1.5">היסטוריית קבוצות</h5>
+                    <div className="space-y-1">
                       {sortedHistory.map((row, idx) => (
-                        <div key={idx} className="grid grid-cols-2 gap-2 py-1 border-b border-gray-100 last:border-0 items-center">
-                          <div className="text-right text-gray-500 font-medium">{row.season}</div>
-                          <div className="text-right font-semibold" style={{ color: 'var(--primary)' }}>
-                            {row.team_name} <span className="text-[10px] text-gray-500">({row.league_name})</span>
-                          </div>
+                        <div key={idx} className="flex items-start gap-2 py-1.5 border-b border-gray-100 last:border-0">
+                          <span className="text-[9px] text-gray-500 font-medium flex-shrink-0">{row.season}</span>
+                          <span className="text-[10px] font-semibold flex-1 text-right" style={{ color: 'var(--primary)' }}>
+                            {row.team_name} <span className="text-[9px] text-gray-500">({row.league_name || 'לא ידוע'})</span>
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -198,15 +197,22 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
   );
 }
 
-const StatBox = ({ label, value, rank, suffix }) => {
+const StatBox = ({ label, value, rank, suffix, gradient, textColor, accentColor }) => {
+  const bgClass = gradient ? `bg-gradient-to-br ${gradient}` : 'bg-white';
+  const valueColorClass = accentColor ? '' : (textColor || 'text-gray-700');
+  
   return (
-    <div className="bg-white rounded-lg p-1.5 text-center border border-gray-100 flex flex-col items-center">
-      <div className="text-sm font-bold text-gray-700 text-center">
+    <div className={`${bgClass} rounded-lg p-1.5 border border-gray-100 flex flex-col items-center justify-center w-full`}>
+      <div className={`text-base font-bold ${valueColorClass}`} style={accentColor ? { color: 'var(--accent)' } : {}}>
         {value !== null && value !== undefined ? Number(value).toFixed(1) : '-'}
         {suffix && <span className="text-[10px] text-gray-500">{suffix}</span>}
       </div>
-      <div className="text-[9px] text-gray-500 text-center">{label}</div>
-      {rank && <div className="text-[9px] text-orange-600 text-center">#{rank}</div>}
+      <div className="text-[9px] text-gray-600">{label}</div>
+      {rank && (
+        <div className={`text-[9px] font-semibold flex items-center justify-center gap-0.5 mt-0.5 ${accentColor ? 'text-orange-600' : textColor || 'text-gray-600'}`}>
+          #{rank}
+        </div>
+      )}
     </div>
   );
 };
