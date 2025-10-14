@@ -365,7 +365,7 @@ export default function TeamDetailPage() {
               משחקים שהתקיימו ({completedGames.length})
             </h3>
             {completedGames.length > 0 ? (
-              completedGames.map(game => <GameCard key={game.id} game={game} />)
+              completedGames.map(game => <GameCard key={game.game_id} game={game} />)
             ) : (
               <div className="text-center py-8 text-gray-500 text-sm">
                 אין משחקים שהתקיימו
@@ -378,7 +378,7 @@ export default function TeamDetailPage() {
               משחקים עתידיים ({upcomingGames.length})
             </h3>
             {upcomingGames.length > 0 ? (
-              upcomingGames.map(game => <GameCard key={game.id} game={game} />)
+              upcomingGames.map(game => <GameCard key={game.game_id} game={game} />)
             ) : (
               <div className="text-center py-8 text-gray-500 text-sm">
                 אין משחקים עתידיים
