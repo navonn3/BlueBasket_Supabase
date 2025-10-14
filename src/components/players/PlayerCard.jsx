@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,12 +7,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/api/supabaseClient";
+import { supabase } from "@/api/supabaseClient"; // ✅ החלפת base44
 
 export default function PlayerCard({ player, onToggleFavorite }) {
   const navigate = useNavigate();
   const [isExpanded, setIsExpanded] = useState(false);
   
+  // ✅ קריאה לטבלת teams מ-Supabase
   const { data: teams } = useQuery({
     queryKey: ['teams'],
     queryFn: async () => {
@@ -23,7 +23,8 @@ export default function PlayerCard({ player, onToggleFavorite }) {
     },
     initialData: [],
   });
-  
+
+  // ✅ קריאה לטבלת game_player_stats מ-Supabase
   const { data: gamePlayerStats } = useQuery({
     queryKey: ['gamePlayerStats'],
     queryFn: async () => {
@@ -33,7 +34,6 @@ export default function PlayerCard({ player, onToggleFavorite }) {
     },
     initialData: [],
   });
-
   
   const calculateAge = (birthDate) => {
     if (!birthDate) return null;
@@ -56,29 +56,19 @@ export default function PlayerCard({ player, onToggleFavorite }) {
   const age = calculateAge(player.date_of_birth);
   const stats = player.stats;
 
-  // Find team using league_id and current_team_id
-  const playerTeam = teams.find(t => 
-    t.league_id === player.league_id && 
-    t.team_id === player.current_team_id
+  // ✅ שימוש במידע מ-Supabase (זהה לחלוטין ל-Base44)
+  const playerTeam = teams.find(
+    (t) => t.league_id === player.league_id && t.team_id === player.current_team_id
   );
-  
-  // Debug logging
-  console.log('Player:', player.name, {
-    league_id: player.league_id,
-    current_team_id: player.current_team_id,
-    found_team: playerTeam?.team_name,
-    available_teams_in_league: teams.filter(t => t.league_id === player.league_id).map(t => ({ id: t.team_id, name: t.team_name }))
-  });
   
   const teamShortName = playerTeam?.short_name || playerTeam?.team_name || 'ללא קבוצה';
   const bgColor = playerTeam?.bg_color || 'var(--primary)';
   const textColor = playerTeam?.text_color || '#FFFFFF';
-
   const playerNumber = player.jersey_number ? parseInt(player.jersey_number) : null;
 
-  // Get last game stats
+  // ✅ שליפת משחק אחרון מתוך game_player_stats
   const playerGames = gamePlayerStats
-    .filter(gs => {
+    .filter((gs) => {
       if (gs.player_name === player.name) return true;
       const normalize = (str) => str?.trim().toLowerCase().replace(/\s+/g, ' ');
       return normalize(gs.player_name) === normalize(player.name);
