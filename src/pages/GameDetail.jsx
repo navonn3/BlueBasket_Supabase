@@ -215,8 +215,13 @@ export default function GameDetailPage() {
 
   const hasScore = game.home_score !== null && game.home_score !== undefined;
 
-  const homeTeam = findTeamByName(teams, game.home_team, game.league_id);
-  const awayTeam = findTeamByName(teams, game.away_team, game.league_id);
+  const homeTeam = game.home_team_id 
+    ? teams.find(t => t.team_id === game.home_team_id && t.league_id === game.league_id)
+    : findTeamByName(teams, game.home_team, game.league_id);
+  
+  const awayTeam = game.away_team_id
+    ? teams.find(t => t.team_id === game.away_team_id && t.league_id === game.league_id)
+    : findTeamByName(teams, game.away_team, game.league_id);
 
   const homeColors = {
     bg: homeTeam?.bg_color || 'var(--primary)',
