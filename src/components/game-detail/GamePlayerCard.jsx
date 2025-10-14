@@ -177,6 +177,26 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                   </div>
                 )}
 
+                {/* סטטיסטיקות ממוצעות (כשהמשחק טרם התקיים) */}
+                {!hasGameEnded && seasonStats && (
+                  <div>
+                    <h5 className="text-[10px] font-semibold text-gray-600 mb-1.5">ממוצעים בעונה</h5>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      <StatBox label="נק׳" value={seasonStats.pts} />
+                      <StatBox label="ריב׳" value={seasonStats.reb} />
+                      <StatBox label="אס׳" value={seasonStats.ast} />
+                      <StatBox label="דק׳" value={seasonStats.min} suffix="'" />
+                    </div>
+                    <div className="grid grid-cols-4 gap-1.5 mt-1.5">
+                      <StatBox label="FG%" value={seasonStats.fg_pct} suffix="%" />
+                      <StatBox label="3PT%" value={seasonStats['3pt_pct']} suffix="%" />
+                      <StatBox label="FT%" value={seasonStats.ft_pct} suffix="%" />
+                      <StatBox label="חט׳" value={seasonStats.stl} />
+                    </div>
+                  </div>
+                )}
+
+                
                 {/* ממוצעי העונה */}
                 {seasonStats && (
                   <div>
