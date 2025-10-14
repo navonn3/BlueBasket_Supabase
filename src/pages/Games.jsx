@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -36,7 +35,7 @@ export default function GamesPage() {
         .from('games')
         .select('*')
         .eq('league_id', selectedLeague)
-        .order('date', { ascending: false });
+        .order('date', { ascending: true }); // שינוי כאן: מהישן לחדש
       return data || [];
     },
     initialData: [],
@@ -64,15 +63,13 @@ export default function GamesPage() {
     enabled: !!user?.email,
     initialData: [],
   });
+  
   const gamesWithDetails = games.map(game => {
-    // Determine the unique identifier for the game, preferring 'gameid' if it exists.
     const gameIdentifier = game.gameid || game.id;
-    // Check if the current game is favorited based on its identifier
     const isFavorite = favorites.some(f => f.item_id === gameIdentifier);
 
     return {
       ...game,
-      // Add the isFavorite status directly to the game object for easier access in rendering
       isFavorite
     };
   });
@@ -113,7 +110,7 @@ export default function GamesPage() {
   const upcomingGames = gamesWithDetails.filter(g => g.home_score === null || g.home_score === undefined);
 
   const getFilteredGames = () => {
-    let gamesToFilter = gamesWithDetails; // Filter on the enriched gamesWithDetails
+    let gamesToFilter = gamesWithDetails;
     if (gameFilter === "completed") gamesToFilter = completedGames;
     if (gameFilter === "upcoming") gamesToFilter = upcomingGames;
 
@@ -166,10 +163,8 @@ export default function GamesPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 mb-0.5">משחקים שהתקיימו</p>
-                <p className="text-xl font-bold" style={{ color: 'var(--primary)' }}>
-                  {completedGames.length}
-                </p>
+                <p className="text-[10px] text-gray-500 mb-0.5">הושלמו</p>
+                <p className="text-xl font-bold text-green-600">{completedGames.length}</p>
               </div>
               <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
                 <CalendarIcon className="w-4 h-4 text-green-600" />
@@ -177,31 +172,23 @@ export default function GamesPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 col-span-2 md:col-span-1">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[10px] text-gray-500 mb-0.5">קבוצות</p>
-                <p className="text-xl font-bold" style={{ color: 'var(--primary)' }}>{teams.length}</p>
+                <p className="text-[10px] text-gray-500 mb-0.5">עתידיים</p>
+                <p className="text-xl font-bold" style={{ color: 'var(--accent)' }}>{upcomingGames.length}</p>
               </div>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(255, 107, 53, 0.1)' }}>
-                <MapPin className="w-4 h-4" style={{ color: 'var(--accent)' }} />
+                <CalendarIcon className="w-4 h-4" style={{ color: 'var(--accent)' }} />
               </div>
             </div>
           </div>
         </div>
 
-        <Tabs value={gameFilter} onValueChange={setGameFilter} className="mb-4">
-          <TabsList className="grid w-full grid-cols-3 h-9">
-            <TabsTrigger value="all" className="text-xs">כל המשחקים</TabsTrigger>
-            <TabsTrigger value="completed" className="text-xs">הסתיימו</TabsTrigger>
-            <TabsTrigger value="upcoming" className="text-xs">עתידיים</TabsTrigger>
-          </TabsList>
-        </Tabs>
-
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 mb-4">
-          <div className="flex flex-col gap-2">
+          <div className="space-y-2">
             <div className="relative">
-              <Search className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5" />
               <Input
                 placeholder="חיפוש לפי קבוצה..."
                 value={searchQuery}
@@ -258,15 +245,19 @@ export default function GamesPage() {
         ) : (
           <div className="space-y-2">
             {filteredGames.map((game) => {
-              // The game object already contains 'isFavorite' from gamesWithDetails map
+              // תיקון: מעבירים את כל האובייקט game
+              const gameIdentifier = game.gameid || game.id;
+              const gameName = `${game.home_team} vs ${game.away_team}`;
+              
               return (
                 <GameCard
-                  key={game.id} // Assuming game.id is still the primary key for React lists
+                  key={game.id}
                   game={game}
-                  isFavorite={game.isFavorite} // Use the pre-calculated isFavorite property
+                  isFavorite={game.isFavorite}
                   onToggleFavorite={() => toggleFavoriteMutation.mutate({
-                    game: game, // Pass the full game object to the mutation
-                    isFavorite: game.isFavorite // Pass its current favorite status
+                    gameId: gameIdentifier,
+                    gameName: gameName,
+                    isFavorite: game.isFavorite
                   })}
                 />
               );
