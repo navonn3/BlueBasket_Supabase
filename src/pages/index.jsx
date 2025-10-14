@@ -32,6 +32,8 @@ import Standings from "./Standings";
 
 import Home from "./Home";
 
+import GameScorersPage from "./GameScorersPage";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -67,6 +69,9 @@ const PAGES = {
     Standings: Standings,
     
     Home: Home,
+
+    GameScorersPage: GameScorersPage,
+
     
 }
 
@@ -104,6 +109,8 @@ function PagesContent() {
                 <Route path="/GameDetail" element={<GameDetail />} />
                 
                 <Route path="/TeamStats" element={<TeamStats />} />
+
+                <Route path="/GameScorersPage" element={<GameScorersPage />} />
                 
                 <Route path="/PlayerDetail" element={<PlayerDetail />} />
                 
