@@ -189,13 +189,14 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
 
 const StatBox = ({ label, value, rank, suffix }) => {
   return (
-    <div className="bg-white rounded-lg p-1.5 text-center border border-gray-100">
-      <div className="text-sm font-bold text-gray-700">
+    <div className="bg-white rounded-lg p-1.5 flex flex-col items-center justify-center border border-gray-100 text-center">
+      <div className="text-sm font-bold text-gray-700 flex items-baseline justify-center">
         {value !== null && value !== undefined ? Number(value).toFixed(1) : '-'}
-        {suffix && <span className="text-[10px] text-gray-500">{suffix}</span>}
+        {suffix && <span className="text-[10px] text-gray-500 ml-0.5">{suffix}</span>}
       </div>
-      <div className="text-[9px] text-gray-500">{label}</div>
-      {rank && <div className="text-[9px] text-orange-600">#{rank}</div>}
+      <div className="text-[9px] text-gray-500 mt-0.5">{label}</div>
+      {rank && <div className="text-[9px] text-orange-600 mt-0.5">#{rank}</div>}
     </div>
   );
-}
+};
+
