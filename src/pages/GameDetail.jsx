@@ -33,8 +33,8 @@ export default function GameDetailPage() {
     initialData: []
   });
 
-  const game = games.find((g) => String(g.id) === String(gameId));
-
+  
+  const game = games.find((g) => g.game_id === gameId);
   // --- PLAYERS ---
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['players', game?.league_id],
