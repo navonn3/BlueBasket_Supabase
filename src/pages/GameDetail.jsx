@@ -223,47 +223,7 @@ export default function GameDetailPage() {
     ? teams.find(t => t.team_id === game.away_team_id && t.league_id === game.league_id)
     : findTeamByName(teams, game.away_team, game.league_id);
 
-  
-  console.log('=== DEBUG GameDetail ===');
-  console.log('Game:', {
-    game_id: game.game_id,
-    home_team: game.home_team,
-    home_team_id: game.home_team_id,
-    away_team: game.away_team,
-    away_team_id: game.away_team_id,
-    league_id: game.league_id
-  });
-  console.log('HomeTeam found:', homeTeam);
-  console.log('AwayTeam found:', awayTeam);
-  console.log('Total players loaded:', players.length);
-  console.log('Players for this league:', players.filter(p => p.league_id === game.league_id).length);
-  
-  // בדוק את השחקנים לפי homeTeam
-  if (homeTeam) {
-    const homeTeamPlayersDebug = players.filter(p => 
-      p.league_id === game.league_id && p.current_team_id === homeTeam.team_id
-    );
-    console.log(`Players for homeTeam (${homeTeam.team_name}):`, homeTeamPlayersDebug.length);
-    console.log('Sample home player:', homeTeamPlayersDebug[0]);
-  }
-  
-  // בדוק את השחקנים לפי awayTeam
-  if (awayTeam) {
-    const awayTeamPlayersDebug = players.filter(p => 
-      p.league_id === game.league_id && p.current_team_id === awayTeam.team_id
-    );
-    console.log(`Players for awayTeam (${awayTeam.team_name}):`, awayTeamPlayersDebug.length);
-    console.log('Sample away player:', awayTeamPlayersDebug[0]);
-  }
-  
-  console.log('hasScore:', hasScore);
-  if (hasScore) {
-    console.log('gamePlayerStats count:', gamePlayerStats.length);
-    console.log('Sample stat:', gamePlayerStats[0]);
-  }
-  console.log('=== END DEBUG ===');
-
-  
+    
   const homeColors = {
     bg: homeTeam?.bg_color || 'var(--primary)',
     text: homeTeam?.text_color || getContrastColor(homeTeam?.bg_color || 'var(--primary)')
@@ -628,20 +588,21 @@ export default function GameDetailPage() {
                     <tr className="border-b border-gray-100">
                       <td className="p-2 font-medium">{homeTeam?.short_name || game.home_team}</td>
                       {[1, 2, 3, 4].map((q) => {
-                      const quarter = homeQuarters.find((hq) => hq.quarter === q);
-                      return <td key={q} className="text-center p-2">{quarter?.team_score || '-'}</td>;
-                    })}
+                        const quarter = homeQuarters.find((hq) => hq.quarter === q);
+                        return <td key={q} className="text-center p-2">{quarter?.score || '-'}</td>;
+                      })}
                       <td className="text-center p-2 font-bold" style={{ color: 'var(--accent)' }}>{game.home_score}</td>
                     </tr>
                     <tr>
                       <td className="p-2 font-medium">{awayTeam?.short_name || game.away_team}</td>
                       {[1, 2, 3, 4].map((q) => {
-                      const quarter = awayQuarters.find((aq) => aq.quarter === q);
-                      return <td key={q} className="text-center p-2">{quarter?.team_score || '-'}</td>;
-                    })}
+                        const quarter = awayQuarters.find((aq) => aq.quarter === q);
+                        return <td key={q} className="text-center p-2">{quarter?.score || '-'}</td>;
+                      })}
                       <td className="text-center p-2 font-bold" style={{ color: 'var(--accent)' }}>{game.away_score}</td>
                     </tr>
                   </tbody>
+
                 </table>
               </div>
             </CardContent>
