@@ -4,12 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { TrendingUp, Trophy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 
 export default function GameStatsCard({ team, stats }) {
   const { data: teamMappings } = useQuery({
     queryKey: ['teamMappings'],
-    queryFn: () => base44.entities.TeamNameMapping.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('team_name_mapping').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
