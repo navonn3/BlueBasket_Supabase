@@ -61,6 +61,8 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
     { label: 'אס׳', value: gameStats.ast }
   ] : null;
 
+
+  
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     try {
