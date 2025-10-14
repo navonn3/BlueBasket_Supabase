@@ -69,9 +69,9 @@ export default function GameDetailPage() {
 
   // --- GAME PLAYER STATS ---
   const { data: gamePlayerStats, isLoading: gameStatsLoading } = useQuery({
-    queryKey: ['gamePlayerStats', game?.gameid],
+    queryKey: ['gamePlayerStats', game?.game_id],
     queryFn: async () => {
-      if (!game?.gameid) return [];
+      if (!game?.game_id) return [];
       const { data, error } = await supabase
         .from('game_player_stats')
         .select('*')
@@ -80,14 +80,14 @@ export default function GameDetailPage() {
       return data || [];
     },
     initialData: [],
-    enabled: !!game?.gameid
+    enabled: !!game?.game_id
   });
 
   // --- GAME TEAM STATS ---
   const { data: gameTeamStats, isLoading: teamStatsLoading } = useQuery({
-    queryKey: ['gameTeamStats', game?.gameid],
+    queryKey: ['gameTeamStats', game?.game_id],
     queryFn: async () => {
-      if (!game?.gameid) return [];
+      if (!game?.game_id) return [];
       const { data, error } = await supabase
         .from('game_team_stats')
         .select('*')
@@ -96,7 +96,7 @@ export default function GameDetailPage() {
       return data || [];
     },
     initialData: [],
-    enabled: !!game?.gameid
+    enabled: !!game?.game_id
   });
 
   // --- TEAM AVERAGES ---
@@ -133,9 +133,9 @@ export default function GameDetailPage() {
 
   // --- GAME QUARTERS ---
   const { data: gameQuarters, isLoading: quartersLoading } = useQuery({
-    queryKey: ['gameQuarters', game?.gameid],
+    queryKey: ['gameQuarters', game?.game_id],
     queryFn: async () => {
-      if (!game?.gameid) return [];
+      if (!game?.game_id) return [];
       const { data, error } = await supabase
         .from('game_quarters')
         .select('*')
@@ -144,7 +144,7 @@ export default function GameDetailPage() {
       return data || [];
     },
     initialData: [],
-    enabled: !!game?.gameid
+    enabled: !!game?.game_id
   });
 
   // --- TEAMS ---
