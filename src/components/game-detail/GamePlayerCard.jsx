@@ -3,8 +3,25 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronUp, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/api/supabaseClient";
 
-export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEnded, teamColors, leagueId, seasonHistory }) {
+export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEnded, teamColors, leagueId }) {
+  // שליפת היסטוריה מבפנים
+  const { data: seasonHistory } = useQuery({
+    queryKey: ['seasonHistory', player.player_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('player_season_history')
+        .select('*')
+        .eq('player_id', player.player_id);
+      if (error) throw error;
+      return data || [];
+    },
+    initialData: [],
+    enabled: isExpanded && !!player.player_id
+  });
+
   const calculateAge = (birthDate) => {
     if (!birthDate) return null;
     try {
@@ -35,7 +52,7 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
   const age = calculateAge(player.date_of_birth);
   const gameStats = player.gameStats;
   const seasonStats = player.stats;
-  const playerNumber = player.number ? parseInt(player.number) : null;
+  const playerNumber = player.jersey_number ? parseInt(player.jersey_number) : null;
 
   const showGameStats = hasGameEnded && gameStats;
   const topGameStats = showGameStats ? [
@@ -240,13 +257,13 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
 
 const StatBox = ({ label, value, rank, suffix }) => {
   return (
-    <div className="bg-white rounded-lg p-1.5 text-center border border-gray-100">
-      <div className="text-sm font-bold text-gray-700">
+    <div className="bg-white rounded-lg p-1.5 border border-gray-100">
+      <div className="text-sm font-bold text-gray-700 text-center">
         {value !== null && value !== undefined ? Number(value).toFixed(1) : '-'}
         {suffix && <span className="text-[10px] text-gray-500">{suffix}</span>}
       </div>
-      <div className="text-[9px] text-gray-500">{label}</div>
-      {rank && <div className="text-[9px] text-orange-600">#{rank}</div>}
+      <div className="text-[9px] text-gray-500 text-center">{label}</div>
+      {rank && <div className="text-[9px] text-orange-600 text-center">#{rank}</div>}
     </div>
   );
 };
