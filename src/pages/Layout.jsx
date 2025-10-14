@@ -92,7 +92,8 @@ const navigationItems = [
   title: "מועדפים",
   url: createPageUrl("Favorites"),
   icon: Heart
-};
+}
+];
 
 
 export default function Layout({ children, currentPageName }) {
