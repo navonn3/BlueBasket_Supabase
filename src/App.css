@@ -1,8 +1,7 @@
 /* ============
-   הגדרות כלליות לכל האתר
+   הגדרות כלליות
    ============ */
 
-/* מבטל גלילה אופקית בכל מצב */
 html,
 body {
   margin: 0;
@@ -13,7 +12,6 @@ body {
   background-color: var(--background);
 }
 
-/* אלמנט השורש של האפליקציה */
 #root {
   width: 100%;
   min-height: 100vh;
@@ -21,7 +19,6 @@ body {
   background-color: var(--background);
 }
 
-/* הגדרה גלובלית של RTL */
 * {
   box-sizing: border-box;
   direction: rtl;
@@ -30,10 +27,9 @@ body {
 }
 
 /* ============
-   תצוגת מובייל (ברירת מחדל)
+   מובייל (ברירת מחדל)
    ============ */
 
-/* במובייל — התוכן מוצג ברוחב מלא */
 main {
   display: flex;
   flex-direction: column;
@@ -41,18 +37,18 @@ main {
 }
 
 /* ============
-   פריסת דסקטופ בלבד
+   דסקטופ בלבד
    ============ */
 @media (min-width: 1024px) {
   main {
     display: flex;
-    justify-content: flex-end; /* מצמיד את התוכן לימין (ולא למרכז כל המסך) */
+    justify-content: center; /* מרכז את התוכן בחלק הזמין */
   }
 
   main > div {
-    max-width: 1200px; /* גבול רוחב התוכן */
+    max-width: 1200px;       /* גבול רוחב נוח */
     width: 100%;
-    margin-right: 80px; /* מיישר לפי השטח הימני - שני שלישים בערך */
+    transform: translateX(-120px); /* מזיז את התוכן מעט שמאלה — לכיוון מרכז השטח הפנוי */
   }
 }
 
@@ -60,7 +56,6 @@ main {
    כללים נוספים
    ============ */
 
-/* מונע חריגות אלמנטים שיגרמו ל-scroll לצדדים */
 *,
 *::before,
 *::after {
@@ -68,14 +63,12 @@ main {
   box-sizing: border-box;
 }
 
-/* מוודא שכל רכיב (בעיקר טבלאות) לא יחרוג מהמסך */
 table {
   width: 100%;
   border-collapse: collapse;
   overflow-x: auto;
 }
 
-/* רקע כללי נעים */
 body {
   background-color: #f9f9fb;
   color: #111;
