@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Trophy, TrendingUp, Target, Award, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,31 +111,47 @@ export default function LeagueLeadersPage() {
     queryKey: ['playerAverages', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.PlayerAverages.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('player_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
-
+  
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['players', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Player.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
+    },
+    initialData: [],
+    enabled: !!selectedLeague,
+  });
+  
+  const { data: teams } = useQuery({
+    queryKey: ['teams', selectedLeague],
+    queryFn: async () => {
+      if (!selectedLeague) return [];
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
-  const { data: teams } = useQuery({
-    queryKey: ['teams', selectedLeague],
-    queryFn: async () => {
-      if (!selectedLeague) return [];
-      return base44.entities.Team.filter({ league_id: selectedLeague });
-    },
-    initialData: [],
-    enabled: !!selectedLeague,
-  });
 
   const isLoading = avgLoading || playersLoading;
 
