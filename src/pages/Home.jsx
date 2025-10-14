@@ -369,7 +369,7 @@ export default function HomePage() {
                   
                   <Button 
                     className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => navigate(createPageUrl("GameDetail") + `?id=${nextGame.gameid || nextGame.id}`)}
+                    onClick={() => navigate(createPageUrl("GameDetail") + `?id=${nextGame.gameid || nextgame.game_id}`)}
                   >
                     פרטי המשחק
                   </Button>
@@ -430,7 +430,7 @@ export default function HomePage() {
                   
                   <Button 
                     className="w-full bg-green-600 hover:bg-green-700"
-                    onClick={() => navigate(createPageUrl("GameDetail") + `?id=${lastGame.gameid || lastGame.id}`)}
+                    onClick={() => navigate(createPageUrl("GameDetail") + `?id=${lastGame.gameid || lastgame.game_id}`)}
                   >
                     תוצאות מלאות
                   </Button>
@@ -653,7 +653,7 @@ export default function HomePage() {
                   
                   return (
                     <div 
-                      key={game.id}
+                      key={game.game_id}
                       className="flex items-center gap-2 p-2 bg-gray-50 rounded hover:bg-gray-100 transition-colors cursor-pointer"
                       onClick={() => navigate(createPageUrl("GameDetail") + `?id=${game.gameid || game.game_id}`)}
                     >
