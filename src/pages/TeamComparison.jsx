@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,45 +33,70 @@ export default function TeamComparisonPage() {
     return () => window.removeEventListener('leagueChanged', handleLeagueChange);
   }, []);
 
+  // Teams
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['teams', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Team.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
-
+  
+  // TeamAverages
   const { data: teamAverages, isLoading: teamAvgLoading } = useQuery({
     queryKey: ['teamAverages', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.TeamAverages.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('team_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
-
+  
+  // OpponentAverages
   const { data: opponentAverages, isLoading: oppAvgLoading } = useQuery({
     queryKey: ['opponentAverages', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.OpponentAverages.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('opponent_averages')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
+    },
+    initialData: [],
+    enabled: !!selectedLeague,
+  });
+  
+  // Games
+  const { data: games, isLoading: gamesLoading } = useQuery({
+    queryKey: ['games', selectedLeague],
+    queryFn: async () => {
+      if (!selectedLeague) return [];
+      const { data, error } = await supabase
+        .from('games')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
-  const { data: games, isLoading: gamesLoading } = useQuery({
-    queryKey: ['games', selectedLeague],
-    queryFn: async () => {
-      if (!selectedLeague) return [];
-      return base44.entities.Game.filter({ league_id: selectedLeague });
-    },
-    initialData: [],
-    enabled: !!selectedLeague,
-  });
 
   // teamColors query is removed as colors are now part of the Team entity
 
