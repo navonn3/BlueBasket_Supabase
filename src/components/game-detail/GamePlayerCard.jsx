@@ -39,7 +39,7 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
 
   const showGameStats = hasGameEnded && gameStats;
   const topGameStats = showGameStats ? [
-    { label: 'נק׳', value: gameStats.pts },
+    { label: 'נקקקק׳', value: gameStats.pts },
     { label: 'ריב׳', value: gameStats.reb },
     { label: 'אס׳', value: gameStats.ast }
   ] : null;
