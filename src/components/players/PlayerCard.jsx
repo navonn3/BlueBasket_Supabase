@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 
 export default function PlayerCard({ player, onToggleFavorite }) {
   const navigate = useNavigate();
@@ -16,15 +16,24 @@ export default function PlayerCard({ player, onToggleFavorite }) {
   
   const { data: teams } = useQuery({
     queryKey: ['teams'],
-    queryFn: () => base44.entities.Team.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('teams').select('*');
+      if (error) throw error;
+      return data || [];
+    },
+    initialData: [],
+  });
+  
+  const { data: gamePlayerStats } = useQuery({
+    queryKey: ['gamePlayerStats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('game_player_stats').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
-  const { data: gamePlayerStats } = useQuery({
-    queryKey: ['gamePlayerStats'],
-    queryFn: () => base44.entities.GamePlayerStats.list(),
-    initialData: [],
-  });
   
   const calculateAge = (birthDate) => {
     if (!birthDate) return null;
