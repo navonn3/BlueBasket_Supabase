@@ -181,18 +181,18 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                   <div>
                     <h5 className="text-[10px] font-semibold text-gray-600 mb-1.5">ממוצעי העונה</h5>
                     <div className="grid grid-cols-4 gap-1.5">
-                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-1.5 text-center border border-gray-100">
-                        <div className="text-base font-bold text-purple-700">
+                      <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-1.5 border border-gray-100 text-center">
+                        <div className="text-base font-bold text-purple-700 text-center">
                           {seasonStats.min ? Number(seasonStats.min).toFixed(1) : '0.0'}
                         </div>
-                        <div className="text-[9px] text-gray-600">דק' (MIN)</div>
+                        <div className="text-[9px] text-gray-600 text-center">דק' (MIN)</div>
                       </div>
-
-                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-1.5 text-center border border-gray-100">
-                        <div className="text-base font-bold" style={{ color: 'var(--accent)' }}>
+                
+                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-1.5 border border-gray-100 text-center">
+                        <div className="text-base font-bold text-center" style={{ color: 'var(--accent)' }}>
                           {seasonStats.pts ? Number(seasonStats.pts).toFixed(1) : '0.0'}
                         </div>
-                        <div className="text-[9px] text-gray-600">נק' (PTS)</div>
+                        <div className="text-[9px] text-gray-600 text-center">נק' (PTS)</div>
                         {seasonStats.pts_rank && (
                           <div className="text-[9px] text-orange-600 font-semibold flex items-center justify-center gap-0.5 mt-0.5">
                             <Trophy className="w-2.5 h-2.5" />
@@ -201,11 +201,11 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                         )}
                       </div>
                       
-                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-1.5 text-center border border-gray-100">
-                        <div className="text-base font-bold text-blue-700">
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-1.5 border border-gray-100 text-center">
+                        <div className="text-base font-bold text-blue-700 text-center">
                           {seasonStats.reb ? Number(seasonStats.reb).toFixed(1) : '0.0'}
                         </div>
-                        <div className="text-[9px] text-gray-600">ריב' (REB)</div>
+                        <div className="text-[9px] text-gray-600 text-center">ריב' (REB)</div>
                         {seasonStats.reb_rank && (
                           <div className="text-[9px] text-blue-600 font-semibold flex items-center justify-center gap-0.5 mt-0.5">
                             <Trophy className="w-2.5 h-2.5" />
@@ -214,11 +214,11 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                         )}
                       </div>
                       
-                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-1.5 text-center border border-gray-100">
-                        <div className="text-base font-bold text-green-700">
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-1.5 border border-gray-100 text-center">
+                        <div className="text-base font-bold text-green-700 text-center">
                           {seasonStats.ast ? Number(seasonStats.ast).toFixed(1) : '0.0'}
                         </div>
-                        <div className="text-[9px] text-gray-600">אס' (AST)</div>
+                        <div className="text-[9px] text-gray-600 text-center">אס' (AST)</div>
                         {seasonStats.ast_rank && (
                           <div className="text-[9px] text-green-600 font-semibold flex items-center justify-center gap-0.5 mt-0.5">
                             <Trophy className="w-2.5 h-2.5" />
@@ -229,23 +229,24 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                     </div>
                   </div>
                 )}
-
+                
                 {/* היסטוריית קבוצות */}
                 {sortedHistory.length > 0 && (
                   <div>
                     <h5 className="text-[10px] font-semibold text-gray-600 mb-1.5">היסטוריית קבוצות</h5>
                     <div className="space-y-1">
                       {sortedHistory.map((row, idx) => (
-                        <div key={idx} className="flex items-start gap-2 py-1.5 border-b border-gray-100 last:border-0">
-                          <span className="text-[9px] text-gray-500 font-medium flex-shrink-0">{row.season}</span>
+                        <div key={idx} className="flex items-start gap-3 py-1.5 border-b border-gray-100 last:border-0">
+                          <span className="text-[9px] text-gray-500 font-medium flex-shrink-0 w-14">{row.season}</span>
                           <span className="text-[10px] font-semibold flex-1 text-right" style={{ color: 'var(--primary)' }}>
-                            {row.team_name} <span className="text-[9px] text-gray-500">({row.league_name || 'לא ידוע'})</span>
+                            {row.team_name}   <span className="text-[9px] text-gray-500">({row.league_name || 'לא ידוע'})</span>
                           </span>
                         </div>
                       ))}
                     </div>
                   </div>
                 )}
+
               </div>
             </motion.div>
           )}
