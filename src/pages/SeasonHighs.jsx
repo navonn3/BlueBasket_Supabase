@@ -1,14 +1,14 @@
-
 import React, { useState, useEffect } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { Trophy, TrendingUp, Users, Ruler, Calendar } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
+// --- CONSTANTS ---
 const STAT_CATEGORIES = [
   { key: 'pts', label: 'נקודות במשחק', icon: Trophy, color: 'from-orange-500 to-red-500' },
   { key: 'reb', label: 'ריבאונדים במשחק', icon: TrendingUp, color: 'from-blue-500 to-indigo-500' },
@@ -36,18 +36,22 @@ export default function SeasonHighsPage() {
   });
 
   useEffect(() => {
-    const handleLeagueChange = (e) => {
-      setSelectedLeague(e.detail);
-    };
+    const handleLeagueChange = (e) => setSelectedLeague(e.detail);
     window.addEventListener('leagueChanged', handleLeagueChange);
     return () => window.removeEventListener('leagueChanged', handleLeagueChange);
   }, []);
 
+  // --- SUPABASE QUERIES ---
   const { data: gamePlayerStats, isLoading: statsLoading } = useQuery({
     queryKey: ['gamePlayerStats', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.GamePlayerStats.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('game_player_stats')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
@@ -57,7 +61,12 @@ export default function SeasonHighsPage() {
     queryKey: ['players', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Player.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
@@ -67,7 +76,12 @@ export default function SeasonHighsPage() {
     queryKey: ['teams', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Team.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('teams')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
@@ -77,14 +91,21 @@ export default function SeasonHighsPage() {
     queryKey: ['games', selectedLeague],
     queryFn: async () => {
       if (!selectedLeague) return [];
-      return base44.entities.Game.filter({ league_id: selectedLeague });
+      const { data, error } = await supabase
+        .from('games')
+        .select('*')
+        .eq('league_id', selectedLeague);
+      if (error) throw error;
+      return data || [];
     },
     initialData: [],
     enabled: !!selectedLeague,
   });
 
+  // --- LOADING STATE ---
   const isLoading = statsLoading || playersLoading;
 
+  // --- HELPERS ---
   const calculateAge = (birthDate) => {
     if (!birthDate) return null;
     try {
@@ -94,9 +115,7 @@ export default function SeasonHighsPage() {
       const today = new Date();
       let age = today.getFullYear() - birth.getFullYear();
       const monthDiff = today.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-        age--;
-      }
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--;
       return age;
     } catch {
       return null;
@@ -105,21 +124,16 @@ export default function SeasonHighsPage() {
 
   const parseHeight = (heightValue) => {
     if (!heightValue) return null;
-    if (typeof heightValue === 'number') {
-      if (heightValue < 10) return heightValue * 100; // Assume values < 10 are meters
-      return heightValue; // Assume values >= 10 are cm
-    }
-    if (typeof heightValue === 'string') {
-      const match = heightValue.match(/(\d+\.?\d*)/);
-      if (match) {
-        const value = parseFloat(match[0]);
-        if (value < 10) return value * 100;
-        return value;
-      }
+    if (typeof heightValue === 'number') return heightValue < 10 ? heightValue * 100 : heightValue;
+    const match = heightValue.match(/(\d+\.?\d*)/);
+    if (match) {
+      const value = parseFloat(match[0]);
+      return value < 10 ? value * 100 : value;
     }
     return null;
   };
 
+  // --- CORE LOGIC (unchanged) ---
   const getTopPerformances = () => {
     const isPlayerCategory = PLAYER_CATEGORIES.some(c => c.key === selectedCategory);
 
@@ -135,52 +149,33 @@ export default function SeasonHighsPage() {
           textColor: team?.text_color || '#FFFFFF'
         };
       }).filter(p => {
-        if (selectedCategory === 'oldest' || selectedCategory === 'youngest') {
-          return p.age !== null;
-        }
-        if (selectedCategory === 'tallest' || selectedCategory === 'shortest') {
-          return p.heightCm !== null;
-        }
+        if (['oldest', 'youngest'].includes(selectedCategory)) return p.age !== null;
+        if (['tallest', 'shortest'].includes(selectedCategory)) return p.heightCm !== null;
         return true;
       });
 
-      if (selectedCategory === 'oldest') {
-        return playersWithData.sort((a, b) => b.age - a.age).slice(0, 10);
-      } else if (selectedCategory === 'youngest') {
-        return playersWithData.sort((a, b) => a.age - b.age).slice(0, 10);
-      } else if (selectedCategory === 'tallest') {
-        return playersWithData.sort((a, b) => b.heightCm - a.heightCm).slice(0, 10);
-      } else if (selectedCategory === 'shortest') {
-        return playersWithData.sort((a, b) => a.heightCm - b.heightCm).slice(0, 10);
-      }
+      if (selectedCategory === 'oldest') return playersWithData.sort((a, b) => b.age - a.age).slice(0, 10);
+      if (selectedCategory === 'youngest') return playersWithData.sort((a, b) => a.age - b.age).slice(0, 10);
+      if (selectedCategory === 'tallest') return playersWithData.sort((a, b) => b.heightCm - a.heightCm).slice(0, 10);
+      if (selectedCategory === 'shortest') return playersWithData.sort((a, b) => a.heightCm - b.heightCm).slice(0, 10);
     } else {
-      // Game performance categories
       const validStats = gamePlayerStats
         .filter(stat => stat[selectedCategory] !== null && stat[selectedCategory] !== undefined)
         .map(stat => {
           const player = players.find(p => p.player_id === stat.player_id || p.name === stat.player_name);
           const team = teams.find(t => t.team_id === stat.team_id);
-          
-          // Find the game to get home and away teams
           const game = games.find(g => g.gameid === stat.game_id || g.id === stat.game_id);
-          
-          let homeTeamName = '';
-          let awayTeamName = '';
-          
-          if (game) {
-            const homeTeam = teams.find(t => t.team_id === game.home_team_id);
-            const awayTeam = teams.find(t => t.team_id === game.away_team_id);
-            homeTeamName = homeTeam?.short_name || homeTeam?.team_name || game.home_team;
-            awayTeamName = awayTeam?.short_name || awayTeam?.team_name || game.away_team;
-          }
-          
+
+          const homeTeam = teams.find(t => t.team_id === game?.home_team_id);
+          const awayTeam = teams.find(t => t.team_id === game?.away_team_id);
+
           return {
             ...stat,
             player,
             teamName: team?.short_name || team?.team_name || stat.team,
-            homeTeamName,
-            awayTeamName,
-            round: stat.round || game?.round, // Prioritize game.round if available
+            homeTeamName: homeTeam?.short_name || homeTeam?.team_name || game?.home_team,
+            awayTeamName: awayTeam?.short_name || awayTeam?.team_name || game?.away_team,
+            round: stat.round || game?.round,
             bgColor: team?.bg_color || 'var(--primary)',
             textColor: team?.text_color || '#FFFFFF'
           };
@@ -190,7 +185,6 @@ export default function SeasonHighsPage() {
 
       return validStats;
     }
-
     return [];
   };
 
