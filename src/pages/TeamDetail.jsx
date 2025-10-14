@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Users, Trophy, TrendingUp, Calendar, Target, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,39 +24,64 @@ export default function TeamDetailPage() {
 
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['players'],
-    queryFn: () => base44.entities.Player.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('players').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games'],
-    queryFn: () => base44.entities.Game.list('date'),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('games').select('*').order('date', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: teamAverages, isLoading: averagesLoading } = useQuery({
     queryKey: ['teamAverages'],
-    queryFn: () => base44.entities.TeamAverages.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('team_averages').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: opponentAverages, isLoading: oppAvgLoading } = useQuery({
     queryKey: ['opponentAverages'],
-    queryFn: () => base44.entities.OpponentAverages.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('opponent_averages').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
   const { data: playerAverages, isLoading: playerAvgLoading } = useQuery({
     queryKey: ['playerAverages'],
-    queryFn: () => base44.entities.PlayerAverages.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('player_averages').select('*');
+      if (error) throw error;
+      return data || [];
+    },
+    initialData: [],
+  });
+  
+  const { data: teams } = useQuery({
+    queryKey: ['teams'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('teams').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
-  const { data: teams } = useQuery({
-    queryKey: ['teams'],
-    queryFn: () => base44.entities.Team.list(),
-    initialData: [],
-  });
 
   const isLoading = playersLoading || gamesLoading || averagesLoading || oppAvgLoading || playerAvgLoading;
 
