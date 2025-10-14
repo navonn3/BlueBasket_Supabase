@@ -12,36 +12,27 @@ export default function ExpandablePlayerCard({ player, isExpanded, onToggle }) {
     if (!birthDate) return null;
     try {
       let birth;
-      
-      // נסה לזהות את הפורמט ולהמיר
+  
+      // ✅ ידוע שהפורמט תמיד YYYY/MM/DD
       if (birthDate.includes('/')) {
-        // פורמט: yyyy/mm/dd או dd/mm/yyyy
-        const parts = birthDate.split('/');
-        if (parts.length !== 3) return null;
-        
-        // ✅ תיקון: תמיד השנה היא החלק הראשון עבור פורמט 2009/04/23
-        if (parts[0].length === 4) {
-          // פורמט yyyy/mm/dd (השנה ראשונה)
-          birth = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
-        } else {
-          // פורמט dd/mm/yyyy
-          birth = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-        }
+        const [year, month, day] = birthDate.split('/');
+        birth = new Date(Number(year), Number(month) - 1, Number(day));
       } else if (birthDate.includes('-')) {
-        // פורמט ISO: yyyy-mm-dd
-        birth = new Date(birthDate);
+        // פורמט ISO YYYY-MM-DD
+        const [year, month, day] = birthDate.split('-');
+        birth = new Date(Number(year), Number(month) - 1, Number(day));
       } else {
-        // נסה פשוט ליצור תאריך
         birth = new Date(birthDate);
       }
-      
+  
       // בדוק שהתאריך תקין
       if (isNaN(birth.getTime())) return null;
-      
+  
       const today = new Date();
       let age = today.getFullYear() - birth.getFullYear();
       const monthDiff = today.getMonth() - birth.getMonth();
-      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      const dayDiff = today.getDate() - birth.getDate();
+      if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
         age--;
       }
       return age;
@@ -49,28 +40,7 @@ export default function ExpandablePlayerCard({ player, isExpanded, onToggle }) {
       return null;
     }
   };
-  
-  // ✅ פונקציה לעיצוב תאריך לתצוגה
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    try {
-      const parts = dateStr.split('/');
-      if (parts.length === 3) {
-        // תמיד השנה היא החלק הראשון עבור פורמט 2009/04/23
-        if (parts[0].length === 4) {
-          // yyyy/mm/dd -> dd/mm/yyyy
-          return `${parts[2]}/${parts[1]}/${parts[0]}`;
-        } else {
-          // כבר בפורמט dd/mm/yyyy
-          return dateStr;
-        }
-      }
-      return dateStr;
-    } catch {
-      return dateStr;
-    }
-  };
-  
+
   const age = calculateAge(player.date_of_birth);
   const stats = player.stats;
   const gameStats = player.gameStats;
