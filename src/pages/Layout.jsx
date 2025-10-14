@@ -239,8 +239,11 @@ export default function Layout({ children, currentPageName }) {
             </SidebarGroup>
           </SidebarContent>
         </Sidebar>
-
-        <main className="flex-1 flex flex-col">
+        
+        <main
+          className="flex-1 flex flex-col items-center"
+          style={{ backgroundColor: 'var(--background)' }}
+        >
           {/* Fixed Header for Mobile - Always Visible */}
           <header className="bg-orange-500 px-6 py-3 md:hidden fixed top-0 left-0 right-0 z-[100] shadow-md">
             <div className="flex items-center justify-center gap-4 relative">
@@ -250,12 +253,15 @@ export default function Layout({ children, currentPageName }) {
               <SidebarTrigger className="absolute left-0 hover:bg-white/20 p-2 rounded-lg transition-colors duration-200 text-white" />
             </div>
           </header>
-
-          {/* Page Content - With padding to account for fixed header */}
-          <div className="flex-1 overflow-auto pt-[60px] md:pt-0">
+        
+          {/* Page Content */}
+          <div
+            className="w-full max-w-6xl flex-1 overflow-auto pt-[60px] md:pt-0 px-4 md:px-8"
+          >
             {children}
           </div>
         </main>
+        
       </div>
     </SidebarProvider>
   );
