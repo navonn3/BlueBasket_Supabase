@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { findTeamByName } from "../shared/teamHelpers";
 
 export default function GameCard({ game, onToggleFavorite, isFavorite }) {
@@ -18,9 +18,14 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
   
   const { data: teams } = useQuery({
     queryKey: ['teams'],
-    queryFn: () => base44.entities.Team.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('teams').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
+
 
   const homeTeam = findTeamByName(teams, game.home_team, game.league_id);
   const awayTeam = findTeamByName(teams, game.away_team, game.league_id);
