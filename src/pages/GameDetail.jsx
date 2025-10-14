@@ -629,7 +629,7 @@ export default function GameDetailPage() {
 
           <div className="space-y-2">
               {homePlayersWithStats.map((player) =>
-            <PlayerGameCard
+            <GamePlayerCard
               key={player.player_id}
               player={player}
               isExpanded={expandedPlayer === player.player_id}
@@ -656,7 +656,7 @@ export default function GameDetailPage() {
 
           <div className="space-y-2">
               {awayPlayersWithStats.map((player) =>
-            <PlayerGameCard
+            <GamePlayerCard
               key={player.player_id}
               player={player}
               isExpanded={expandedPlayer === player.player_id}
