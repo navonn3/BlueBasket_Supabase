@@ -159,7 +159,7 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                   </div>
                 )}
 
-                {/* ממוצעי העונה */}
+                {/* ממוצעי העונהההההההההה */}
                 {seasonStats && (
                   <div>
                     <h5 className="text-[10px] font-semibold text-gray-600 mb-1.5">ממוצעי העונה</h5>
