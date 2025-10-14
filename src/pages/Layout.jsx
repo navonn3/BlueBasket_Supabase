@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Calendar, Shield, BarChart3, Settings, AlertTriangle, Heart, GitCompare, Trophy, TrendingUp } from "lucide-react";
+import { Users, Calendar, Shield, BarChart3, Settings, AlertTriangle, Heart, GitCompare, Trophy, TrendingUp, FileText } from "lucide-react";
 import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -34,14 +34,9 @@ const navigationItems = [
   icon: BarChart3
 },
 {
-  title: "שחקנים",
-  url: createPageUrl("Players"),
-  icon: Users
-},
-{
-  title: "קבוצות",
-  url: createPageUrl("Teams"),
-  icon: Shield
+  title: "לוח משחקים",
+  url: createPageUrl("Games"),
+  icon: Calendar
 },
 {
   title: "טבלה",
@@ -49,15 +44,22 @@ const navigationItems = [
   icon: BarChart3
 },
 {
+  title: "קבוצות",
+  url: createPageUrl("Teams"),
+  icon: Shield
+},
+{
+  title: "שחקנים",
+  url: createPageUrl("Players"),
+  icon: Users
+},
+
+{
   title: "סטטיסטיקה קבוצתית",
   url: createPageUrl("TeamStats"),
   icon: BarChart3
 },
-{
-  title: "לוח משחקים",
-  url: createPageUrl("Games"),
-  icon: Calendar
-},
+
 {
   title: "מובילי הליגה",
   url: createPageUrl("LeagueLeaders"),
@@ -68,11 +70,7 @@ const navigationItems = [
   url: createPageUrl("SeasonHighs"),
   icon: TrendingUp
 },
-{
-  title: "מועדפים",
-  url: createPageUrl("Favorites"),
-  icon: Heart
-},
+
 {
   title: "השוואת שחקנים",
   url: createPageUrl("PlayerComparison"),
@@ -85,10 +83,16 @@ const navigationItems = [
 },
 
 {
-  title: "הגדרות",
-  url: createPageUrl("Settings"),
-  icon: Settings
-}];
+  title: "רשימת קלעים למשחק",
+  url: createPageUrl("GameScorersPage"),
+  icon: FileText
+},
+
+{
+  title: "מועדפים",
+  url: createPageUrl("Favorites"),
+  icon: Heart
+};
 
 
 export default function Layout({ children, currentPageName }) {
