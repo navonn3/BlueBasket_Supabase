@@ -75,7 +75,7 @@ export default function GameDetailPage() {
       const { data, error } = await supabase
         .from('game_player_stats')
         .select('*')
-        .eq('game_id', game.gameid);
+        .eq('game_id', game.game_id);
       if (error) throw error;
       return data || [];
     },
@@ -91,7 +91,7 @@ export default function GameDetailPage() {
       const { data, error } = await supabase
         .from('game_team_stats')
         .select('*')
-        .eq('game_id', game.gameid);
+        .eq('game_id', game.game_id);
       if (error) throw error;
       return data || [];
     },
@@ -139,7 +139,7 @@ export default function GameDetailPage() {
       const { data, error } = await supabase
         .from('game_quarters')
         .select('*')
-        .eq('game_id', game.gameid);
+        .eq('game_id', game.game_id);
       if (error) throw error;
       return data || [];
     },
