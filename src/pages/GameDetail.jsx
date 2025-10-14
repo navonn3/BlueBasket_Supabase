@@ -628,10 +628,10 @@ export default function GameDetailPage() {
           <div className="space-y-2">
               {homePlayersWithStats.map((player) =>
             <PlayerGameCard
-              key={player.id}
+              key={player.player_id}
               player={player}
-              isExpanded={expandedPlayer === player.id}
-              onToggle={() => setExpandedPlayer(expandedPlayer === player.id ? null : player.id)}
+              isExpanded={expandedPlayer === player.player_id}
+              onToggle={() => setExpandedPlayer(expandedPlayer === player.player_id ? null : player.player_id)}
               hasGameEnded={hasScore}
               teamColors={homeColors}
               leagueId={game.league_id} />
@@ -655,10 +655,10 @@ export default function GameDetailPage() {
           <div className="space-y-2">
               {awayPlayersWithStats.map((player) =>
             <PlayerGameCard
-              key={player.id}
+              key={player.player_id}
               player={player}
-              isExpanded={expandedPlayer === player.id}
-              onToggle={() => setExpandedPlayer(expandedPlayer === player.id ? null : player.id)}
+              isExpanded={expandedPlayer === player.player_id}
+              onToggle={() => setExpandedPlayer(expandedPlayer === player.player_id ? null : player.player_id)}
               hasGameEnded={hasScore}
               teamColors={awayColors}
               leagueId={game.league_id} />
