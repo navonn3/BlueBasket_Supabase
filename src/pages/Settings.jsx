@@ -49,9 +49,9 @@ export default function SettingsPage() {
   const { data: leagues } = useQuery({
     queryKey: ['leagues'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('leagues').select('*');
+      const { data, error } = await supabase.from("leagues").select("*");
       if (error) throw error;
-      return data || [];
+      return data;
     },
     initialData: [],
   });
