@@ -49,8 +49,10 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
     // מונע נווט אם לחצו על כפתור
     if (e.target.closest('button')) return;
     
-    // תיקון: משתמשים בגרסה הנכונה של ה-ID
-    const gameIdentifier = game.gameid || game.id;
+    // תיקון: משתמשים ב-id שהוא ה-primary key האמיתי
+    // gameid הוא שדה נפרד שאולי ריק, id הוא התמיד קיים
+    const gameIdentifier = game.id;
+    console.log('Navigating to game:', gameIdentifier, 'Full game object:', game);
     navigate(`/gamedetail?id=${gameIdentifier}`);
   };
 
@@ -61,7 +63,7 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
 
   const handlePDFAction = (e, type, action) => {
     e.stopPropagation();
-    const gameIdentifier = game.gameid || game.id;
+    const gameIdentifier = game.id;
     window.open(`/gamedaypdf?id=${gameIdentifier}&type=${type}&action=${action}`, '_blank');
     setShowPDFMenu(false);
   };
@@ -207,7 +209,7 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
               {/* Home Team */}
               <div className="text-center min-w-0">
                 <div 
-                  className="text-[10px] sm:text-xs font-bold py-1 px-1.5 sm:px-2 rounded mb-1 truncate"
+                  className="text-[10px] sm:text-xs font-bold py-1 px-1.5 sm:px-2 rounded mb-1 truncate text-center"
                   style={{ 
                     backgroundColor: homeColors.bg, 
                     color: homeColors.text 
@@ -217,7 +219,7 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
                 </div>
                 {hasScore && (
                   <div 
-                    className={`text-base sm:text-xl font-bold ${homeWon ? 'text-green-600' : 'text-gray-500'}`}
+                    className={`text-base sm:text-xl font-bold text-center ${homeWon ? 'text-green-600' : 'text-gray-500'}`}
                   >
                     {game.home_score}
                   </div>
@@ -227,16 +229,16 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
               {/* VS / Score Separator */}
               <div className="text-center px-1 sm:px-2 flex-shrink-0">
                 {hasScore ? (
-                  <div className="text-lg sm:text-2xl font-bold text-gray-400">-</div>
+                  <div className="text-lg sm:text-2xl font-bold text-gray-400 text-center">-</div>
                 ) : (
-                  <div className="text-xs sm:text-sm font-semibold text-gray-400">VS</div>
+                  <div className="text-xs sm:text-sm font-semibold text-gray-400 text-center">VS</div>
                 )}
               </div>
 
               {/* Away Team */}
               <div className="text-center min-w-0">
                 <div 
-                  className="text-[10px] sm:text-xs font-bold py-1 px-1.5 sm:px-2 rounded mb-1 truncate"
+                  className="text-[10px] sm:text-xs font-bold py-1 px-1.5 sm:px-2 rounded mb-1 truncate text-center"
                   style={{ 
                     backgroundColor: awayColors.bg, 
                     color: awayColors.text 
@@ -246,7 +248,7 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
                 </div>
                 {hasScore && (
                   <div 
-                    className={`text-base sm:text-xl font-bold ${awayWon ? 'text-green-600' : 'text-gray-500'}`}
+                    className={`text-base sm:text-xl font-bold text-center ${awayWon ? 'text-green-600' : 'text-gray-500'}`}
                   >
                     {game.away_score}
                   </div>
