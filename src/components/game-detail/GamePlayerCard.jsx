@@ -9,14 +9,43 @@ import { format } from "date-fns";
 export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEnded }) {
   const calculateAge = (birthDate) => {
     if (!birthDate) return null;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+    try {
+      let birth;
+      
+      // נסה לזהות את הפורמט ולהמיר
+      if (birthDate.includes('/')) {
+        // פורמט: yyyy/mm/dd או dd/mm/yyyy
+        const parts = birthDate.split('/');
+        if (parts.length !== 3) return null;
+        
+        // בדוק אם זה yyyy/mm/dd (השנה ראשונה)
+        if (parts[0].length === 4) {
+          birth = new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
+        } else {
+          // פורמט dd/mm/yyyy
+          birth = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        }
+      } else if (birthDate.includes('-')) {
+        // פורמט ISO: yyyy-mm-dd
+        birth = new Date(birthDate);
+      } else {
+        // נסה פשוט ליצור תאריך
+        birth = new Date(birthDate);
+      }
+      
+      // בדוק שהתאריך תקין
+      if (isNaN(birth.getTime())) return null;
+      
+      const today = new Date();
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+        age--;
+      }
+      return age;
+    } catch {
+      return null;
     }
-    return age;
   };
 
   const age = calculateAge(player.date_of_birth);
