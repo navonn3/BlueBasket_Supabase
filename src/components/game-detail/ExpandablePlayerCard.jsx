@@ -182,35 +182,35 @@ export default function ExpandablePlayerCard({ player, isExpanded, onToggle }) {
                   </h5>
                   <div className="grid grid-cols-3 gap-1.5 text-center">
                     {stats.points_avg !== undefined && (
-                      <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
+                      <div className="bg-white rounded-lg p-2 flex flex-col items-center justify-center border border-gray-200">
                         <div className="text-sm font-bold" style={{ color: 'var(--accent)' }}>
                           {Number(stats.points_avg).toFixed(1)}
                         </div>
-                        <div className="text-xs text-gray-600">נק' למשחק</div>
+                        <div className="text-xs text-gray-600">נק׳ למשחק</div>
                         {stats.points_rank && (
-                          <div className="text-xs text-gray-500 mt-0.5">#{stats.points_rank}</div>
+                          <div className="text-[10px] text-gray-500 mt-0.5">#{stats.points_rank}</div>
                         )}
                       </div>
                     )}
                     {stats.rebounds_avg !== undefined && (
-                      <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
+                      <div className="bg-white rounded-lg p-2 flex flex-col items-center justify-center border border-gray-200">
                         <div className="text-sm font-bold text-blue-700">
                           {Number(stats.rebounds_avg).toFixed(1)}
                         </div>
-                        <div className="text-xs text-gray-600">ריב' למשחק</div>
+                        <div className="text-xs text-gray-600">ריב׳ למשחק</div>
                         {stats.rebounds_rank && (
-                          <div className="text-xs text-gray-500 mt-0.5">#{stats.rebounds_rank}</div>
+                          <div className="text-[10px] text-gray-500 mt-0.5">#{stats.rebounds_rank}</div>
                         )}
                       </div>
                     )}
                     {stats.assists_avg !== undefined && (
-                      <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
+                      <div className="bg-white rounded-lg p-2 flex flex-col items-center justify-center border border-gray-200">
                         <div className="text-sm font-bold text-green-700">
                           {Number(stats.assists_avg).toFixed(1)}
                         </div>
-                        <div className="text-xs text-gray-600">אס' למשחק</div>
+                        <div className="text-xs text-gray-600">אס׳ למשחק</div>
                         {stats.assists_rank && (
-                          <div className="text-xs text-gray-500 mt-0.5">#{stats.assists_rank}</div>
+                          <div className="text-[10px] text-gray-500 mt-0.5">#{stats.assists_rank}</div>
                         )}
                       </div>
                     )}
@@ -218,6 +218,7 @@ export default function ExpandablePlayerCard({ player, isExpanded, onToggle }) {
                 </div>
               )}
               
+              {/* טבלת ההיסטוריה המעודכנת */}
               {seasons.length > 0 && (
                 <div>
                   <h5 className="text-xs font-semibold text-gray-600 mb-2 flex items-center justify-center gap-1">
@@ -230,9 +231,12 @@ export default function ExpandablePlayerCard({ player, isExpanded, onToggle }) {
                         key={season.key} 
                         className="flex justify-between items-center p-1.5 bg-white rounded-lg border border-gray-100"
                       >
+                        {/* שנה - מצד ימין */}
                         <span className="text-xs text-gray-500">{season.label}</span>
+              
+                        {/* קבוצה וליגה מצד שמאל */}
                         <div className="flex flex-col items-end text-right">
-                          <span className="text-xs font-semibold truncate ml-1" style={{ color: 'var(--primary)' }}>
+                          <span className="text-xs font-semibold truncate" style={{ color: 'var(--primary)' }}>
                             {player[season.key]}
                           </span>
                           {player[`${season.key}_league_name`] && (
@@ -246,6 +250,7 @@ export default function ExpandablePlayerCard({ player, isExpanded, onToggle }) {
                   </div>
                 </div>
               )}
+
 
                 {(!gameStats && !stats && seasons.length === 0) && (
                   <p className="text-sm text-gray-500 text-center py-2">
