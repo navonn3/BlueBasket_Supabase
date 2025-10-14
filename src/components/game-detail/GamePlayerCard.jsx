@@ -133,8 +133,8 @@ export default function GamePlayerCard({ player, isExpanded, onToggle, hasGameEn
                 <div className="flex gap-1">
                   {topGameStats.map((stat, idx) => (
                     <div key={idx} className="text-center px-1.5 py-0.5 rounded bg-gray-100">
-                      <div className="text-xs font-bold">{stat.value || 0}</div>
-                      <div className="text-[9px] text-gray-600">{stat.label}</div>
+                      <div className="text-xs font-bold text-center">{stat.value || 0}</div>
+                      <div className="text-[9px] text-gray-600 text-center">{stat.label}</div>
                     </div>
                   ))}
                 </div>
