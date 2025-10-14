@@ -48,7 +48,7 @@ main {
   main > div {
     max-width: 1200px;       /* גבול רוחב נוח */
     width: 100%;
-    transform: translateX(-120px); /* מזיז את התוכן מעט שמאלה — לכיוון מרכז השטח הפנוי */
+    transform: translateX(120px); /* מזיז את התוכן מעט שמאלה — לכיוון מרכז השטח הפנוי */
   }
 }
 
