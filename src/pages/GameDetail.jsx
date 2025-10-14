@@ -362,6 +362,21 @@ export default function GameDetailPage() {
   const homeQuarters = gameQuarters.filter((q) => q.team_id === homeTeam?.team_id).sort((a, b) => a.quarter - b.quarter);
   const awayQuarters = gameQuarters.filter((q) => q.team_id === awayTeam?.team_id).sort((a, b) => a.quarter - b.quarter);
 
+  // הוסף את זה ב-GameDetail.jsx מיד אחרי השורות של homeQuarters ו-awayQuarters:
+  
+  console.log('=== DEBUG QUARTERS ===');
+  console.log('gameQuarters:', gameQuarters);
+  console.log('gameQuarters length:', gameQuarters.length);
+  if (gameQuarters.length > 0) {
+    console.log('Sample quarter:', gameQuarters[0]);
+    console.log('All team_ids in quarters:', gameQuarters.map(q => q.team_id));
+  }
+  console.log('homeTeam.team_id:', homeTeam?.team_id);
+  console.log('awayTeam.team_id:', awayTeam?.team_id);
+  console.log('homeQuarters:', homeQuarters);
+  console.log('awayQuarters:', awayQuarters);
+  console.log('=== END DEBUG QUARTERS ===');
+  
   const handleDownloadPDF = (e, type) => {
     e.preventDefault();
     window.open(createPageUrl("GameDayPDF") + `?id=${game.game_id}&type=${type}`, '_blank');
