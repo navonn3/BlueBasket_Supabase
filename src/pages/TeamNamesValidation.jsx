@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -17,31 +17,51 @@ export default function TeamNamesValidationPage() {
 
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['players'],
-    queryFn: () => base44.entities.Player.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('players').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games'],
-    queryFn: () => base44.entities.Game.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('games').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
   const { data: teams, isLoading: teamsLoading } = useQuery({
     queryKey: ['teams'],
-    queryFn: () => base44.entities.Team.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('teams').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
   const { data: playerAverages, isLoading: avgLoading } = useQuery({
     queryKey: ['playerAverages'],
-    queryFn: () => base44.entities.PlayerAverages.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('player_averages').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
   const { data: teamAverages, isLoading: teamAvgLoading } = useQuery({
     queryKey: ['teamAverages'],
-    queryFn: () => base44.entities.TeamAverages.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('team_averages').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
