@@ -139,106 +139,114 @@ export default function ExpandablePlayerCard({ player, isExpanded, onToggle }) {
               className="border-t border-gray-200"
             >
               <div className="p-3 bg-gradient-to-b from-gray-50 to-white space-y-3">
-                {gameStats && (
-                  <div>
-                    <h5 className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      ביצועים במשחק
-                    </h5>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {gameStats.points !== undefined && (
-                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-1.5 text-center">
-                          <div className="text-base font-bold" style={{ color: 'var(--accent)' }}>
-                            {gameStats.points}
-                          </div>
-                          <div className="text-xs text-gray-600">נק'</div>
+              {gameStats && (
+                <div>
+                  <h5 className="text-xs font-semibold text-gray-600 mb-2 flex items-center justify-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    ביצועים במשחק
+                  </h5>
+                  <div className="grid grid-cols-3 gap-1.5 text-center">
+                    {gameStats.points !== undefined && (
+                      <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-1.5 text-center">
+                        <div className="text-base font-bold" style={{ color: 'var(--accent)' }}>
+                          {gameStats.points}
                         </div>
-                      )}
-                      {gameStats.rebounds !== undefined && (
-                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-1.5 text-center">
-                          <div className="text-base font-bold text-blue-700">
-                            {gameStats.rebounds}
-                          </div>
-                          <div className="text-xs text-gray-600">ריב'</div>
+                        <div className="text-xs text-gray-600">נק'</div>
+                      </div>
+                    )}
+                    {gameStats.rebounds !== undefined && (
+                      <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-1.5 text-center">
+                        <div className="text-base font-bold text-blue-700">
+                          {gameStats.rebounds}
                         </div>
-                      )}
-                      {gameStats.assists !== undefined && (
-                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-1.5 text-center">
-                          <div className="text-base font-bold text-green-700">
-                            {gameStats.assists}
-                          </div>
-                          <div className="text-xs text-gray-600">בישו'</div>
+                        <div className="text-xs text-gray-600">ריב'</div>
+                      </div>
+                    )}
+                    {gameStats.assists !== undefined && (
+                      <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-1.5 text-center">
+                        <div className="text-base font-bold text-green-700">
+                          {gameStats.assists}
                         </div>
-                      )}
-                    </div>
+                        <div className="text-xs text-gray-600">אס'</div>
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {stats && (
-                  <div>
-                    <h5 className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
-                      <Target className="w-3 h-3" />
-                      ממוצעים העונה
-                    </h5>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {stats.points_avg !== undefined && (
-                        <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
-                          <div className="text-sm font-bold" style={{ color: 'var(--accent)' }}>
-                            {Number(stats.points_avg).toFixed(1)}
-                          </div>
-                          <div className="text-xs text-gray-600">נק' למשחק</div>
-                          {stats.points_rank && (
-                            <div className="text-xs text-gray-500 mt-0.5">#{stats.points_rank}</div>
-                          )}
+                </div>
+              )}
+              
+              {stats && (
+                <div>
+                  <h5 className="text-xs font-semibold text-gray-600 mb-2 flex items-center justify-center gap-1">
+                    <Target className="w-3 h-3" />
+                    ממוצעי עונה
+                  </h5>
+                  <div className="grid grid-cols-3 gap-1.5 text-center">
+                    {stats.points_avg !== undefined && (
+                      <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
+                        <div className="text-sm font-bold" style={{ color: 'var(--accent)' }}>
+                          {Number(stats.points_avg).toFixed(1)}
                         </div>
-                      )}
-                      {stats.rebounds_avg !== undefined && (
-                        <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
-                          <div className="text-sm font-bold text-blue-700">
-                            {Number(stats.rebounds_avg).toFixed(1)}
-                          </div>
-                          <div className="text-xs text-gray-600">ריב' למשחק</div>
-                          {stats.rebounds_rank && (
-                            <div className="text-xs text-gray-500 mt-0.5">#{stats.rebounds_rank}</div>
-                          )}
+                        <div className="text-xs text-gray-600">נק' למשחק</div>
+                        {stats.points_rank && (
+                          <div className="text-xs text-gray-500 mt-0.5">#{stats.points_rank}</div>
+                        )}
+                      </div>
+                    )}
+                    {stats.rebounds_avg !== undefined && (
+                      <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
+                        <div className="text-sm font-bold text-blue-700">
+                          {Number(stats.rebounds_avg).toFixed(1)}
                         </div>
-                      )}
-                      {stats.assists_avg !== undefined && (
-                        <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
-                          <div className="text-sm font-bold text-green-700">
-                            {Number(stats.assists_avg).toFixed(1)}
-                          </div>
-                          <div className="text-xs text-gray-600">בישו' למשחק</div>
-                          {stats.assists_rank && (
-                            <div className="text-xs text-gray-500 mt-0.5">#{stats.assists_rank}</div>
-                          )}
+                        <div className="text-xs text-gray-600">ריב' למשחק</div>
+                        {stats.rebounds_rank && (
+                          <div className="text-xs text-gray-500 mt-0.5">#{stats.rebounds_rank}</div>
+                        )}
+                      </div>
+                    )}
+                    {stats.assists_avg !== undefined && (
+                      <div className="bg-white rounded-lg p-1.5 text-center border border-gray-200">
+                        <div className="text-sm font-bold text-green-700">
+                          {Number(stats.assists_avg).toFixed(1)}
                         </div>
-                      )}
-                    </div>
+                        <div className="text-xs text-gray-600">אס' למשחק</div>
+                        {stats.assists_rank && (
+                          <div className="text-xs text-gray-500 mt-0.5">#{stats.assists_rank}</div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-
-                {seasons.length > 0 && (
-                  <div>
-                    <h5 className="text-xs font-semibold text-gray-600 mb-2 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      היסטוריית קבוצות
-                    </h5>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {seasons.map(season => (
-                        <div 
-                          key={season.key} 
-                          className="flex justify-between items-center p-1.5 bg-white rounded-lg border border-gray-100"
-                        >
-                          <span className="text-xs text-gray-500">{season.label}</span>
+                </div>
+              )}
+              
+              {seasons.length > 0 && (
+                <div>
+                  <h5 className="text-xs font-semibold text-gray-600 mb-2 flex items-center justify-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    היסטוריית קבוצות
+                  </h5>
+                  <div className="grid grid-cols-1 gap-1.5">
+                    {seasons.map(season => (
+                      <div 
+                        key={season.key} 
+                        className="flex justify-between items-center p-1.5 bg-white rounded-lg border border-gray-100"
+                      >
+                        <span className="text-xs text-gray-500">{season.label}</span>
+                        <div className="flex flex-col items-end text-right">
                           <span className="text-xs font-semibold truncate ml-1" style={{ color: 'var(--primary)' }}>
                             {player[season.key]}
                           </span>
+                          {player[`${season.key}_league_name`] && (
+                            <span className="text-[10px] text-gray-500">
+                              ({player[`${season.key}_league_name`]})
+                            </span>
+                          )}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
+
                 {(!gameStats && !stats && seasons.length === 0) && (
                   <p className="text-sm text-gray-500 text-center py-2">
                     אין מידע נוסף זמין עבור שחקן זה.
