@@ -65,7 +65,8 @@ export default function GamesPage() {
   });
   
   const gamesWithDetails = games.map(game => {
-    const gameIdentifier = game.gameid || game.id;
+    // id הוא ה-primary key האמיתי של הטבלה
+    const gameIdentifier = game.id;
     const isFavorite = favorites.some(f => f.item_id === gameIdentifier);
 
     return {
