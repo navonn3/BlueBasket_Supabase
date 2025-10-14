@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,7 +48,11 @@ export default function SettingsPage() {
 
   const { data: leagues } = useQuery({
     queryKey: ['leagues'],
-    queryFn: () => base44.entities.League.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('leagues').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
 
@@ -56,7 +60,7 @@ export default function SettingsPage() {
     mutationFn: async ({ leagueId, isActive }) => {
       const league = leagues.find(l => l.league_id === leagueId);
       if (league) {
-        await base44.entities.League.update(league.id, { is_active: isActive });
+        await supabase.from('leagues').update({ is_active: isActive }).eq('id', league.id);
       }
     },
     onSuccess: () => {
