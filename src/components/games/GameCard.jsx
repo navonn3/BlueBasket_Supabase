@@ -51,7 +51,7 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
     
     // תיקון: משתמשים ב-id שהוא ה-primary key האמיתי
     // gameid הוא שדה נפרד שאולי ריק, id הוא התמיד קיים
-    const gameIdentifier = game.id;
+    const gameIdentifier = game.game_id;
     console.log('Navigating to game:', gameIdentifier, 'Full game object:', game);
     navigate(`/gamedetail?id=${gameIdentifier}`);
   };
@@ -63,7 +63,7 @@ export default function GameCard({ game, onToggleFavorite, isFavorite }) {
 
   const handlePDFAction = (e, type, action) => {
     e.stopPropagation();
-    const gameIdentifier = game.id;
+    const gameIdentifier = game.game_id;
     window.open(`/gamedaypdf?id=${gameIdentifier}&type=${type}&action=${action}`, '_blank');
     setShowPDFMenu(false);
   };
