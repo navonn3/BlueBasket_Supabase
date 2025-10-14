@@ -14,8 +14,6 @@ import PlayerDetail from "./PlayerDetail";
 
 import TeamDetail from "./TeamDetail";
 
-import Settings from "./Settings";
-
 import TeamNamesValidation from "./TeamNamesValidation";
 
 import Favorites from "./Favorites";
@@ -51,9 +49,7 @@ const PAGES = {
     PlayerDetail: PlayerDetail,
     
     TeamDetail: TeamDetail,
-    
-    Settings: Settings,
-    
+     
     TeamNamesValidation: TeamNamesValidation,
     
     Favorites: Favorites,
@@ -112,9 +108,7 @@ function PagesContent() {
                 <Route path="/PlayerDetail" element={<PlayerDetail />} />
                 
                 <Route path="/TeamDetail" element={<TeamDetail />} />
-                
-                <Route path="/Settings" element={<Settings />} />
-                
+                               
                 <Route path="/TeamNamesValidation" element={<TeamNamesValidation />} />
                 
                 <Route path="/Favorites" element={<Favorites />} />
