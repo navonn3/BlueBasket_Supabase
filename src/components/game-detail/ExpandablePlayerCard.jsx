@@ -1,3 +1,5 @@
+// הקומפוננטה הזו שייכת אך ורק לשחקן בדף קבוצה. לשחקן בדף משחק, לך ל GamePlayerCard
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
