@@ -1,6 +1,6 @@
 
 import React from "react";
-import { base44 } from "@/api/base44Client";
+import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, User, Calendar, Ruler, TrendingUp, Trophy, Target, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,42 +15,77 @@ export default function PlayerDetailPage() {
   const urlParams = new URLSearchParams(window.location.search);
   const playerId = urlParams.get('id');
 
+  // 🟦 Players
   const { data: players, isLoading: playersLoading } = useQuery({
     queryKey: ['players'],
-    queryFn: () => base44.entities.Player.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('players').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
+  // 🟦 Player Averages
   const { data: playerAverages, isLoading: avgLoading } = useQuery({
     queryKey: ['playerAverages'],
-    queryFn: () => base44.entities.PlayerAverages.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('player_averages').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
+  // 🟦 Game Player Stats
   const { data: gamePlayerStats, isLoading: gameStatsLoading } = useQuery({
     queryKey: ['gamePlayerStats'],
-    queryFn: () => base44.entities.GamePlayerStats.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('game_player_stats').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
+  // 🟦 Games
   const { data: games, isLoading: gamesLoading } = useQuery({
     queryKey: ['games'],
-    queryFn: () => base44.entities.Game.list('-date'),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('games').select('*').order('date', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
+  // 🟦 Teams
   const { data: teams } = useQuery({
     queryKey: ['teams'],
-    queryFn: () => base44.entities.Team.list(),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('teams').select('*');
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
   });
-
+  
+  // 🟦 Season History (enabled only if playerId)
   const { data: seasonHistory } = useQuery({
     queryKey: ['seasonHistory', playerId],
-    queryFn: () => base44.entities.PlayerSeasonHistory.filter({ player_id: playerId }),
+    queryFn: async () => {
+      if (!playerId) return [];
+      const { data, error } = await supabase
+        .from('player_season_history')
+        .select('*')
+        .eq('player_id', playerId);
+      if (error) throw error;
+      return data || [];
+    },
     initialData: [],
     enabled: !!playerId,
   });
+
 
   const player = players.find(p => p.id === playerId);
   const isLoading = playersLoading || avgLoading || gameStatsLoading || gamesLoading;
