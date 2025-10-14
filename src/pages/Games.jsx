@@ -66,7 +66,7 @@ export default function GamesPage() {
   
   const gamesWithDetails = games.map(game => {
     // id הוא ה-primary key האמיתי של הטבלה
-    const gameIdentifier = game.id;
+    const gameIdentifier = game.game_id;
     const isFavorite = favorites.some(f => f.item_id === gameIdentifier);
 
     return {
@@ -247,12 +247,12 @@ export default function GamesPage() {
           <div className="space-y-2">
             {filteredGames.map((game) => {
               // תיקון: מעבירים את כל האובייקט game
-              const gameIdentifier = game.gameid || game.id;
+              const gameIdentifier = game.gameid || game.game_id;
               const gameName = `${game.home_team} vs ${game.away_team}`;
               
               return (
                 <GameCard
-                  key={game.id}
+                  key={game.game_id}
                   game={game}
                   isFavorite={game.isFavorite}
                   onToggleFavorite={() => toggleFavoriteMutation.mutate({
