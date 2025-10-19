@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Users, Calendar, Shield, BarChart3, Settings, AlertTriangle, Heart, GitCompare, Trophy, TrendingUp, FileText } from "lucide-react";
 import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
+import { Users, Calendar, Shield, BarChart3, Settings, AlertTriangle, Heart, GitCompare, Trophy, TrendingUp, FileText, Newspaper } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -32,6 +32,11 @@ const navigationItems = [
   title: "דף הבית",
   url: createPageUrl("Home"),
   icon: BarChart3
+},
+{
+  title: "חדשות",
+  url: createPageUrl("News"),
+  icon: Newspaper
 },
 {
   title: "לוח משחקים",
