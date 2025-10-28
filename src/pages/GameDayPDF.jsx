@@ -240,28 +240,35 @@ export default function GameDayPDFPage() {
               lastGameSummary = 'לא שיחק';
             }
 
-            const seasons = [
-              { key: 'season_2024_25', label: '2024-25' },
-              { key: 'season_2023_24', label: '2023-24' },
-              { key: 'season_2022_23', label: '2022-23' },
-              { key: 'season_2021_22', label: '2021-22' },
-              { key: 'season_2020_21', label: '2020-21' },
-              { key: 'season_2019_20', label: '2019-20' },
-              { key: 'season_2018_19', label: '2018-19' },
-              { key: 'season_2017_18', label: '2017-18' },
-              { key: 'season_2016_17', label: '2016-17' },
-            ];
-
             const teamHistory = playerSeasonHistory
               .filter(sh => sh.player_id === player.player_id)
-              .map(sh => ({ season: sh.season, team: sh.team_name }));
+              .map(sh => ({ 
+                season: sh.season, 
+                team: sh.team_name,
+                league: sh.league_name 
+              }));
 
-            const previousTeams = seasons
-              .map(s => {
-                const history = teamHistory.find(th => th.season === s.label);
-                return history ? `${s.label}: ${history.team}` : null;
-              })
-              .filter(Boolean);
+            console.log(`Player ${player.name} history:`, teamHistory);
+
+            // יצירת רשימת ההיסטוריה - מציג את כל העונות שיש לנו
+            let previousTeams;
+            if (teamHistory.length > 0) {
+              // מיון לפי עונה (מהחדש לישן)
+              const sortedHistory = teamHistory.sort((a, b) => {
+                // המרת "2024-25" ל-2024 להשוואה
+                const yearA = parseInt(a.season.split('-')[0]);
+                const yearB = parseInt(b.season.split('-')[0]);
+                return yearB - yearA;
+              });
+
+              // הגבלה ל-5 העונות האחרונות
+              previousTeams = sortedHistory
+                .slice(0, 5)
+                .map(h => `${h.season}: ${h.team}`)
+                .join(' | ');
+            } else {
+              previousTeams = 'אין היסטוריה';
+            }
 
             const formatStat = (value, decimals = 1) => {
               if (value === null || value === undefined) return '-';
@@ -310,7 +317,7 @@ export default function GameDayPDFPage() {
               to: formatStat(stats?.to),
               eff: formatStat(stats?.rate),
               lastGameSummary,
-              previousTeams: previousTeams.length > 0 ? previousTeams.join(' | ') : 'אין היסטוריה',
+              previousTeams,
               _stats: stats
             };
           })
