@@ -1,16 +1,24 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "@/api/supabaseClient";
 import { useQuery } from "@tanstack/react-query";
-import { Loader } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Printer } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function GameDayPDFPage() {
+  const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
   const gameId = urlParams.get('id');
-  const pdfType = urlParams.get('type') || 'basic';
+  const pdfType = urlParams.get('type') || 'extended'; // ברירת מחדל: extended
   
-  const [generating, setGenerating] = useState(false);
+  const [pdfHtml, setPdfHtml] = useState('');
 
+  // Debug logging
+  console.log('GameDayPDF - gameId from URL:', gameId);
+  console.log('GameDayPDF - pdfType:', pdfType);
+
+  // Fetch games
   const { data: games } = useQuery({
     queryKey: ['games'],
     queryFn: async () => {
@@ -20,7 +28,8 @@ export default function GameDayPDFPage() {
     },
     initialData: [],
   });
-  
+
+  // Fetch players
   const { data: players } = useQuery({
     queryKey: ['players'],
     queryFn: async () => {
@@ -30,7 +39,8 @@ export default function GameDayPDFPage() {
     },
     initialData: [],
   });
-  
+
+  // Fetch player averages
   const { data: playerAverages } = useQuery({
     queryKey: ['playerAverages'],
     queryFn: async () => {
@@ -40,7 +50,8 @@ export default function GameDayPDFPage() {
     },
     initialData: [],
   });
-  
+
+  // Fetch game player stats
   const { data: gamePlayerStats } = useQuery({
     queryKey: ['gamePlayerStats'],
     queryFn: async () => {
@@ -50,7 +61,8 @@ export default function GameDayPDFPage() {
     },
     initialData: [],
   });
-  
+
+  // Fetch teams
   const { data: teams } = useQuery({
     queryKey: ['teams'],
     queryFn: async () => {
@@ -61,47 +73,142 @@ export default function GameDayPDFPage() {
     initialData: [],
   });
 
+  // Fetch player season history
+  const { data: playerSeasonHistory } = useQuery({
+    queryKey: ['playerSeasonHistory'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('player_season_history').select('*');
+      if (error) throw error;
+      return data || [];
+    },
+    initialData: [],
+  });
 
-  const game = games.find(g => g.id === gameId || g.gameid === gameId || g.code === gameId);
+  // חיפוש המשחק - תמיכה גם ב-game_id וגם ב-code
+  const game = games.find(g => {
+    // התאמה מדויקת
+    if (g.game_id === gameId) return true;
+    if (g.code === gameId) return true;
+    
+    // התאמה לא case-sensitive
+    if (g.game_id?.toLowerCase() === gameId?.toLowerCase()) return true;
+    if (g.code?.toLowerCase() === gameId?.toLowerCase()) return true;
+    
+    return false;
+  });
+
+  // Debug logging
+  console.log('GameDayPDF - Total games loaded:', games.length);
+  console.log('GameDayPDF - Looking for game with id:', gameId);
+  console.log('GameDayPDF - Found game:', game);
+  if (games.length > 0) {
+    console.log('GameDayPDF - Sample game_id format:', games[0].game_id);
+    console.log('GameDayPDF - First few game IDs:', games.slice(0, 3).map(g => g.game_id));
+  }
+
+  const getTeamByName = (teamName) => {
+    if (!teamName) return null;
+    
+    const normalize = (str) => {
+      if (!str) return '';
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, ' ');
+    };
+    
+    const normalizedInput = normalize(teamName);
+    
+    // חיפוש ישיר
+    const directMatch = teams.find(t => 
+      normalize(t.team_name) === normalizedInput || 
+      normalize(t.short_name) === normalizedInput
+    );
+    if (directMatch) return directMatch;
+    
+    // חיפוש חלקי
+    const partialMatch = teams.find(t => {
+      const normTeamName = normalize(t.team_name);
+      const normShortName = normalize(t.short_name);
+      
+      return normTeamName.includes(normalizedInput) || 
+             normalizedInput.includes(normTeamName) ||
+             normShortName.includes(normalizedInput) || 
+             normalizedInput.includes(normShortName);
+    });
+    
+    return partialMatch;
+  };
+
+  const getTeamColors = (teamName) => {
+    const team = getTeamByName(teamName);
+    return {
+      bg: team?.bg_color || '#1a1f3a',
+      text: team?.text_color || '#FFFFFF'
+    };
+  };
 
   const generatePDF = async () => {
     if (!game) return;
-    setGenerating(true);
 
     try {
-      const getTeamPlayers = (teamId) => {
-        // Filter players by league_id and current_team_id
-        return players
-          .filter(p => p.league_id === game.league_id && p.current_team_id === teamId)
-          .map(player => {
-            const stats = playerAverages.find(avg => {
-              if (avg.player_id === player.player_id) return true;
-              if (avg.player_name === player.name) return true; // Fallback for cases where player_id might not be perfectly matched
-              const normalize = (str) => str?.trim().toLowerCase().replace(/\s+/g, ' ');
-              return normalize(avg.player_name) === normalize(player.name);
-            });
+      const homeTeam = getTeamByName(game.home_team);
+      const awayTeam = getTeamByName(game.away_team);
+      
+      console.log('Original home team:', game.home_team, '-> Found:', homeTeam?.team_name);
+      console.log('Original away team:', game.away_team, '-> Found:', awayTeam?.team_name);
+      
+      const homeColors = getTeamColors(game.home_team);
+      const awayColors = getTeamColors(game.away_team);
+
+      const getTeamPlayers = (teamName) => {
+        console.log('Looking for players in team:', teamName);
+        
+        const team = getTeamByName(teamName);
+        if (!team) {
+          console.log('Team not found:', teamName);
+          return [];
+        }
+
+        const teamPlayers = players.filter(p => 
+          p.current_team_id === team.team_id && p.league_id === team.league_id
+        );
+        
+        console.log(`Found ${teamPlayers.length} players for ${teamName}`);
+        
+        return teamPlayers.map(player => {
+            const stats = playerAverages.find(avg => 
+              avg.player_id === player.player_id && avg.league_id === player.league_id
+            );
 
             const calculateAge = (birthDate) => {
               if (!birthDate) return null;
-              const today = new Date();
-              const birth = new Date(birthDate);
-              let age = today.getFullYear() - birth.getFullYear();
-              const monthDiff = today.getMonth() - birth.getMonth();
-              if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-                age--;
+              try {
+                // תמיכה בפורמטים שונים של תאריך
+                let birth;
+                if (birthDate.includes('/')) {
+                  const parts = birthDate.split('/');
+                  birth = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                } else {
+                  birth = new Date(birthDate);
+                }
+                
+                const today = new Date();
+                let age = today.getFullYear() - birth.getFullYear();
+                const monthDiff = today.getMonth() - birth.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                  age--;
+                }
+                return age;
+              } catch {
+                return null;
               }
-              return age;
             };
 
             const age = calculateAge(player.date_of_birth);
 
             const playerGameHistory = gamePlayerStats
-              .filter(gs => {
-                if (gs.player_id === player.player_id) return true;
-                if (gs.player_name === player.name) return true; // Fallback
-                const normalize = (str) => str?.trim().toLowerCase().replace(/\s+/g, ' ');
-                return normalize(gs.player_name) === normalize(player.name);
-              })
+              .filter(gs => gs.player_id === player.player_id)
               .sort((a, b) => {
                 if (!a.game_date || !b.game_date) return 0;
                 return new Date(b.game_date) - new Date(a.game_date);
@@ -133,83 +240,118 @@ export default function GameDayPDFPage() {
               lastGameSummary = 'לא שיחק';
             }
 
-            // Get player history from PlayerSeasonHistory entity
-            const historyText = '-'; // Simplified for now
+            const seasons = [
+              { key: 'season_2024_25', label: '2024-25' },
+              { key: 'season_2023_24', label: '2023-24' },
+              { key: 'season_2022_23', label: '2022-23' },
+              { key: 'season_2021_22', label: '2021-22' },
+              { key: 'season_2020_21', label: '2020-21' },
+              { key: 'season_2019_20', label: '2019-20' },
+              { key: 'season_2018_19', label: '2018-19' },
+              { key: 'season_2017_18', label: '2017-18' },
+              { key: 'season_2016_17', label: '2016-17' },
+            ];
+
+            const teamHistory = playerSeasonHistory
+              .filter(sh => sh.player_id === player.player_id)
+              .map(sh => ({ season: sh.season, team: sh.team_name }));
+
+            const previousTeams = seasons
+              .map(s => {
+                const history = teamHistory.find(th => th.season === s.label);
+                return history ? `${s.label}: ${history.team}` : null;
+              })
+              .filter(Boolean);
+
+            const formatStat = (value, decimals = 1) => {
+              if (value === null || value === undefined) return '-';
+              return Number(value).toFixed(decimals);
+            };
+
+            const formatPercentage = (value) => {
+              if (value === null || value === undefined || value === 0) return '-';
+              return Math.round(Number(value));
+            };
 
             return {
-              number: parseInt(player.jersey_number) || 999,
+              number: player.jersey_number !== 999 ? player.jersey_number : '',
               name: player.name,
-              height: player.height || '',
-              age: age || '',
-              gp: stats?.games_played || '-',
-              mpg: stats?.min ? Number(stats.min).toFixed(1) : '-',
-              ppg: stats?.pts ? Number(stats.pts).toFixed(1) : '-',
-              fgm: stats?.fgm ? Number(stats.fgm).toFixed(1) : '-',
-              fga: stats?.fga ? Number(stats.fga).toFixed(1) : '-',
-              fg_pct: stats?.fg_pct ? Number(stats.fg_pct).toFixed(1) : '-',
-              '2ptm': stats?.['2ptm'] ? Number(stats['2ptm']).toFixed(1) : '-',
-              '2pta': stats?.['2pta'] ? Number(stats['2pta']).toFixed(1) : '-',
-              '2pt_pct': stats?.['2pt_pct'] ? Number(stats['2pt_pct']).toFixed(1) : '-',
-              '3ptm': stats?.['3ptm'] ? Number(stats['3ptm']).toFixed(1) : '-',
-              '3pta': stats?.['3pta'] ? Number(stats['3pta']).toFixed(1) : '-',
-              '3pt_pct': stats?.['3pt_pct'] ? Number(stats['3pt_pct']).toFixed(1) : '-',
-              ftm: stats?.ftm ? Number(stats.ftm).toFixed(1) : '-',
-              fta: stats?.fta ? Number(stats.fta).toFixed(1) : '-',
-              ft_pct: stats?.ft_pct ? Number(stats.ft_pct).toFixed(1) : '-',
-              dreb: stats?.dreb ? Number(stats.dreb).toFixed(1) : '-',
-              oreb: stats?.oreb ? Number(stats.oreb).toFixed(1) : '-',
-              reb: stats?.reb ? Number(stats.reb).toFixed(1) : '-',
-              ast: stats?.ast ? Number(stats.ast).toFixed(1) : '-',
-              stl: stats?.stl ? Number(stats.stl).toFixed(1) : '-',
-              blk: stats?.blk ? Number(stats.blk).toFixed(1) : '-',
-              to: stats?.to ? Number(stats.to).toFixed(1) : '-',
-              eff: stats?.rate ? Number(stats.rate).toFixed(1) : '-',
-              history: historyText,
+              height: player.height ? `${player.height} ס"מ` : '-',
+              age: age || '-',
+              birthDate: player.date_of_birth || '-',
+              gp: stats?.games_played || 0,
+              mpg: formatStat(stats?.min),
+              ppg: formatStat(stats?.pts),
+              fgm: formatStat(stats?.fgm),
+              fga: formatStat(stats?.fga),
+              fg_pct: formatPercentage(stats?.fg_pct),
+              '2ptm': formatStat(stats?.['2ptm']),
+              '2pta': formatStat(stats?.['2pta']),
+              '2pt_pct': formatPercentage(stats?.['2pt_pct']),
+              '3ptm': formatStat(stats?.['3ptm']),
+              '3pta': formatStat(stats?.['3pta']),
+              '3pt_pct': formatPercentage(stats?.['3pt_pct']),
+              ftm: formatStat(stats?.ftm),
+              fta: formatStat(stats?.fta),
+              ft_pct: formatPercentage(stats?.ft_pct),
+              dreb: formatStat(stats?.def),
+              oreb: formatStat(stats?.off),
+              reb: formatStat(stats?.reb),
+              ast: formatStat(stats?.ast),
+              stl: formatStat(stats?.stl),
+              blk: formatStat(stats?.blk),
+              to: formatStat(stats?.to),
+              eff: formatStat(stats?.rate),
               lastGameSummary,
-              // Store original stats for ranking
+              previousTeams: previousTeams.length > 0 ? previousTeams.join(' | ') : 'אין היסטוריה',
               _stats: stats
             };
           })
-          .sort((a, b) => a.number - b.number);
+          .sort((a, b) => {
+            if (a.number === '' && b.number === '') return 0;
+            if (a.number === '') return 1;
+            if (b.number === '') return -1;
+            return a.number - b.number;
+          });
       };
 
-      const homePlayers = getTeamPlayers(game.home_team_id);
-      const awayPlayers = getTeamPlayers(game.away_team_id);
+      const homePlayers = getTeamPlayers(game.home_team);
+      const awayPlayers = getTeamPlayers(game.away_team);
 
+      console.log('Home players:', homePlayers.length);
+      console.log('Away players:', awayPlayers.length);
+
+      // בחירת סוג ה-PDF
+      let htmlContent;
       if (pdfType === 'basic') {
-        generateBasicPDF(game, homePlayers, awayPlayers);
+        htmlContent = generateBasicPDF(game, homePlayers, awayPlayers);
       } else {
-        generateExtendedPDF(game, homePlayers, awayPlayers);
+        htmlContent = generateExtendedPDF(game, homePlayers, awayPlayers);
       }
 
+      setPdfHtml(htmlContent);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      setGenerating(false);
     }
   };
 
   const generateBasicPDF = (game, homePlayers, awayPlayers) => {
-    // Get team names from teams table for display
-    const homeTeam = teams.find(t => t.team_id === game.home_team_id);
-    const awayTeam = teams.find(t => t.team_id === game.away_team_id);
-    const homeTeamName = homeTeam?.short_name || game.home_team;
-    const awayTeamName = awayTeam?.short_name || game.away_team;
-
-    const htmlContent = `
+    return `
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
   <meta charset="UTF-8">
-  <title>${homeTeamName} נגד ${awayTeamName}</title>
+  <title>${game.home_team} נגד ${game.away_team}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    @page { size: A4 portrait; margin: 6mm; }
+    @page { size: A4 portrait; margin: 8mm; }
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .no-print { display: none !important; }
     }
     body { 
       font-family: Arial, sans-serif; 
-      font-size: 7pt; 
+      font-size: 8pt; 
       direction: rtl; 
       color: #000;
       background: #fff;
@@ -217,73 +359,75 @@ export default function GameDayPDFPage() {
     .header { 
       text-align: center; 
       margin-bottom: 3mm; 
-      padding: 2mm;
-      background: #e5e7eb;
+      padding: 1.5mm;
+      background: #e0e0e0;
       border: 1px solid #000;
     }
     .header h1 { 
       font-size: 12pt; 
-      margin-bottom: 1mm;
+      margin-bottom: 0.5mm;
       font-weight: bold;
     }
     .header p { 
       font-size: 8pt;
-      color: #374151;
+      color: #333;
     }
     .team-section {
-      margin-bottom: 3mm;
+      margin-bottom: 2mm;
       page-break-inside: avoid;
     }
     .team-title {
       font-size: 10pt;
       font-weight: bold;
-      background: #d1d5db;
       padding: 1.5mm;
       margin-bottom: 1mm;
       border: 1px solid #000;
+      background: #d0d0d0;
+      color: #000;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 2mm;
+      margin-bottom: 1mm;
     }
     th {
-      background: #9ca3af;
-      padding: 1mm;
+      background: #b0b0b0;
+      padding: 1.2mm 0.8mm;
       text-align: center;
       font-weight: bold;
       border: 1px solid #000;
-      font-size: 7pt;
+      font-size: 7.5pt;
     }
     td {
-      padding: 0.8mm 1mm;
+      padding: 1mm 0.8mm;
       text-align: center;
-      border: 1px solid #6b7280;
-      font-size: 6pt;
+      border: 1px solid #808080;
+      font-size: 7pt;
       vertical-align: top;
-      line-height: 1.2;
+      line-height: 1.3;
     }
     tr:nth-child(even) {
-      background: #f3f4f6;
+      background: #f5f5f5;
     }
     tr:nth-child(odd) {
       background: #fff;
     }
-    .number-col { width: 25px; font-weight: bold; }
-    .name-col { width: 70px; text-align: right; padding-right: 2mm; }
-    .height-col { width: 35px; }
-    .age-col { width: 25px; }
-    .history-col { width: auto; text-align: right; padding-right: 1.5mm; font-size: 5.5pt; line-height: 1.3; }
+    .number-col { width: 30px; font-weight: bold; }
+    .name-col { width: 90px; text-align: right; padding-right: 2mm; }
+    .height-col { width: 40px; }
+    .age-col { width: 30px; }
+    .birth-col { width: 80px; }
+    .history-col { text-align: right; padding-right: 1.5mm; font-size: 5.5pt; line-height: 1.4; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>${homeTeamName} נגד ${awayTeamName}</h1>
-    <p>${game.date ? new Date(game.date).toLocaleDateString('he-IL') : ''} | ${game.time || ''} | ${game.venue || ''}</p>
+    <h1>${game.home_team} נגד ${game.away_team}</h1>
+    <p>${game.date ? new Date(game.date).toLocaleDateString('he-IL') : ''} | ${game.time || ''} | ${game.venue || game.arena || ''}</p>
   </div>
 
   <div class="team-section">
-    <div class="team-title">${homeTeamName} (בית)</div>
+    <div class="team-title">${game.home_team} (בית)</div>
     <table>
       <thead>
         <tr>
@@ -291,17 +435,19 @@ export default function GameDayPDFPage() {
           <th class="name-col">שם</th>
           <th class="height-col">גובה</th>
           <th class="age-col">גיל</th>
+          <th class="birth-col">תאריך לידה</th>
           <th class="history-col">היסטוריה</th>
         </tr>
       </thead>
       <tbody>
         ${homePlayers.map(p => `
           <tr>
-            <td class="number-col">${p.number !== 999 ? p.number : ''}</td>
+            <td class="number-col">${p.number || ''}</td>
             <td class="name-col">${p.name}</td>
             <td class="height-col">${p.height}</td>
             <td class="age-col">${p.age}</td>
-            <td class="history-col">${p.history}</td>
+            <td class="birth-col">${p.birthDate}</td>
+            <td class="history-col">${p.previousTeams}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -309,7 +455,7 @@ export default function GameDayPDFPage() {
   </div>
 
   <div class="team-section">
-    <div class="team-title">${awayTeamName} (חוץ)</div>
+    <div class="team-title">${game.away_team} (חוץ)</div>
     <table>
       <thead>
         <tr>
@@ -317,17 +463,19 @@ export default function GameDayPDFPage() {
           <th class="name-col">שם</th>
           <th class="height-col">גובה</th>
           <th class="age-col">גיל</th>
+          <th class="birth-col">תאריך לידה</th>
           <th class="history-col">היסטוריה</th>
         </tr>
       </thead>
       <tbody>
         ${awayPlayers.map(p => `
           <tr>
-            <td class="number-col">${p.number !== 999 ? p.number : ''}</td>
+            <td class="number-col">${p.number || ''}</td>
             <td class="name-col">${p.name}</td>
             <td class="height-col">${p.height}</td>
             <td class="age-col">${p.age}</td>
-            <td class="history-col">${p.history}</td>
+            <td class="birth-col">${p.birthDate}</td>
+            <td class="history-col">${p.previousTeams}</td>
           </tr>
         `).join('')}
       </tbody>
@@ -336,27 +484,18 @@ export default function GameDayPDFPage() {
 </body>
 </html>
     `;
-
-    openPDF(htmlContent);
   };
 
   const generateExtendedPDF = (game, homePlayers, awayPlayers) => {
-    // Get team names from teams table for display
-    const homeTeam = teams.find(t => t.team_id === game.home_team_id);
-    const awayTeam = teams.find(t => t.team_id === game.away_team_id);
-    const homeTeamName = homeTeam?.short_name || game.home_team;
-    const awayTeamName = awayTeam?.short_name || game.away_team;
-
-    // Get top 3 players for each stat
     const getTop3Rankings = (players, statKey) => {
       const rankings = new Map();
       const validPlayers = players
-        .filter(p => p._stats && p._stats[statKey] !== null && p._stats[statKey] !== undefined && p._stats[statKey] !== '-')
+        .filter(p => p._stats && p._stats[statKey] !== null && p._stats[statKey] !== undefined)
         .sort((a, b) => Number(b._stats[statKey]) - Number(a._stats[statKey]));
       
       validPlayers.forEach((player, index) => {
         if (index < 3) {
-          rankings.set(player.name, index + 1); // 1, 2, or 3
+          rankings.set(player.name, index + 1);
         }
       });
       
@@ -364,119 +503,234 @@ export default function GameDayPDFPage() {
     };
 
     const generateTeamPage = (teamName, players, isHome) => {
-      // Get rankings for each stat
-      const rankings = {
-        gp: getTop3Rankings(players, 'games_played'),
-        min: getTop3Rankings(players, 'min'),
-        pts: getTop3Rankings(players, 'pts'),
-        fg_pct: getTop3Rankings(players, 'fg_pct'),
-        '2pt_pct': getTop3Rankings(players, '2pt_pct'),
-        '3pt_pct': getTop3Rankings(players, '3pt_pct'),
-        ft_pct: getTop3Rankings(players, 'ft_pct'),
-        dreb: getTop3Rankings(players, 'dreb'),
-        oreb: getTop3Rankings(players, 'oreb'),
-        reb: getTop3Rankings(players, 'reb'),
-        ast: getTop3Rankings(players, 'ast'),
-        stl: getTop3Rankings(players, 'stl'),
-        blk: getTop3Rankings(players, 'blk'),
-        to: getTop3Rankings(players, 'to'),
-        rate: getTop3Rankings(players, 'rate')
-      };
+        const getTop3Rankings = (players, stat) => {
+          const validPlayers = players
+            .filter(p => {
+              const value = p[stat];
+              return value !== '-' && value !== null && value !== undefined && value !== 0;
+            })
+            .sort((a, b) => {
+              const aVal = parseFloat(a[stat]);
+              const bVal = parseFloat(b[stat]);
+              return bVal - aVal;
+            });
 
-      const getRankStyle = (rank) => {
-        if (rank === 1) return 'background: #FFF9C4; font-weight: bold;';
-        if (rank === 2) return 'background: #E3F2FD; font-weight: bold;';
-        if (rank === 3) return 'background: #F5F5F5; font-weight: bold;';
-        return '';
-      };
+          const rankMap = new Map();
+          validPlayers.slice(0, 3).forEach((p, index) => {
+            rankMap.set(p.name, index + 1);
+          });
+          return rankMap;
+        };
 
-      return `
+        const rankings = {
+          gp: getTop3Rankings(players, 'gp'),
+          min: getTop3Rankings(players, 'mpg'),
+          pts: getTop3Rankings(players, 'ppg'),
+          fg_pct: getTop3Rankings(players, 'fg_pct'),
+          '2pt_pct': getTop3Rankings(players, '2pt_pct'),
+          '3pt_pct': getTop3Rankings(players, '3pt_pct'),
+          ft_pct: getTop3Rankings(players, 'ft_pct'),
+          dreb: getTop3Rankings(players, 'dreb'),
+          oreb: getTop3Rankings(players, 'oreb'),
+          reb: getTop3Rankings(players, 'reb'),
+          ast: getTop3Rankings(players, 'ast'),
+          stl: getTop3Rankings(players, 'stl'),
+          blk: getTop3Rankings(players, 'blk'),
+          to: getTop3Rankings(players, 'to'),
+          rate: getTop3Rankings(players, 'eff')
+        };
+
+        const getRankStyle = (rank) => {
+          if (rank === 1) return 'background: #e0e0e0; font-weight: bold;';
+          if (rank === 2) return 'background: #ececec; font-weight: bold;';
+          if (rank === 3) return 'background: #f5f5f5; font-weight: bold;';
+          return '';
+        };
+
+        return `
 <div class="page" style="page-break-after: ${isHome ? 'always' : 'auto'};">
   <div class="header">
     <h1>${teamName} (${isHome ? 'בית' : 'חוץ'})</h1>
-    <p>${game.date ? new Date(game.date).toLocaleDateString('he-IL') : ''} | ${game.time || ''} | ${game.venue || ''}</p>
+    <p>${game.date ? new Date(game.date).toLocaleDateString('he-IL') : ''} | ${game.time || ''} | ${game.venue || game.arena || ''}</p>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th class="num">#</th>
-        <th class="name">שם</th>
-        <th class="h">גובה</th>
-        <th class="age">גיל</th>
-        <th class="st">מש'</th>
-        <th class="st">דק'</th>
-        <th class="st">נק'</th>
-        <th class="st">מהשדה</th>
-        <th class="st">%FG</th>
-        <th class="st">ל-2</th>
-        <th class="st">%2P</th>
-        <th class="st">ל-3</th>
-        <th class="st">%3P</th>
-        <th class="st">מהקו</th>
-        <th class="st">%FT</th>
-        <th class="st">ריב'הג'</th>
-        <th class="st">ריב'התק'</th>
-        <th class="st">סה"כריב'</th>
-        <th class="st">אס'</th>
-        <th class="st">חט'</th>
-        <th class="st">חס'</th>
-        <th class="st">איב'</th>
-        <th class="st">מדד</th>
         <th class="last">משחק קודם</th>
+        <th class="st">מדד</th>
+        <th class="st">איב'</th>
+        <th class="st">חס'</th>
+        <th class="st">חט'</th>
+        <th class="st">אס'</th>
+        <th class="st">סה"כ ריב'</th>
+        <th class="st">ריב' התק'</th>
+        <th class="st">ריב' הג'</th>
+        <th class="st">% מהקו</th>
+        <th class="st">מהקו</th>
+        <th class="st">% ל-3</th>
+        <th class="st">ל-3</th>
+        <th class="st">% ל-2</th>
+        <th class="st">ל-2</th>
+        <th class="st">% מהשדה</th>
+        <th class="st">מהשדה</th>
+        <th class="st">נק'</th>
+        <th class="st">דק'</th>
+        <th class="st">מש'</th>
+        <th class="age">גיל</th>
+        <th class="h">גובה</th>
+        <th class="name">שם</th>
+        <th class="num">#</th>
       </tr>
     </thead>
     <tbody>
       ${players.map(p => `
         <tr>
-          <td class="num">${p.number !== 999 ? p.number : ''}</td>
-          <td class="name">${p.name}</td>
-          <td>${p.height}</td>
-          <td>${p.age}</td>
-          <td style="${getRankStyle(rankings.gp.get(p.name))}">${p.gp}</td>
-          <td style="${getRankStyle(rankings.min.get(p.name))}">${p.mpg}</td>
-          <td style="${getRankStyle(rankings.pts.get(p.name))}">${p.ppg}</td>
-          <td>${p.fgm}/${p.fga}</td>
-          <td style="${getRankStyle(rankings.fg_pct.get(p.name))}">${p.fg_pct !== '-' ? p.fg_pct + '%' : '-'}</td>
-          <td>${p['2ptm']}/${p['2pta']}</td>
-          <td style="${getRankStyle(rankings['2pt_pct'].get(p.name))}">${p['2pt_pct'] !== '-' ? p['2pt_pct'] + '%' : '-'}</td>
-          <td>${p['3ptm']}/${p['3pta']}</td>
-          <td style="${getRankStyle(rankings['3pt_pct'].get(p.name))}">${p['3pt_pct'] !== '-' ? p['3pt_pct'] + '%' : '-'}</td>
-          <td>${p.ftm}/${p.fta}</td>
-          <td style="${getRankStyle(rankings.ft_pct.get(p.name))}">${p.ft_pct !== '-' ? p.ft_pct + '%' : '-'}</td>
-          <td style="${getRankStyle(rankings.dreb.get(p.name))}">${p.dreb}</td>
-          <td style="${getRankStyle(rankings.oreb.get(p.name))}">${p.oreb}</td>
-          <td style="${getRankStyle(rankings.reb.get(p.name))}">${p.reb}</td>
-          <td style="${getRankStyle(rankings.ast.get(p.name))}">${p.ast}</td>
-          <td style="${getRankStyle(rankings.stl.get(p.name))}">${p.stl}</td>
-          <td style="${getRankStyle(rankings.blk.get(p.name))}">${p.blk}</td>
-          <td style="${getRankStyle(rankings.to.get(p.name))}">${p.to}</td>
-          <td style="${getRankStyle(rankings.rate.get(p.name))}">${p.eff}</td>
           <td class="last">${p.lastGameSummary}</td>
+          <td style="${getRankStyle(rankings.rate.get(p.name))}">${p.eff}</td>
+          <td style="${getRankStyle(rankings.to.get(p.name))}">${p.to}</td>
+          <td style="${getRankStyle(rankings.blk.get(p.name))}">${p.blk}</td>
+          <td style="${getRankStyle(rankings.stl.get(p.name))}">${p.stl}</td>
+          <td style="${getRankStyle(rankings.ast.get(p.name))}">${p.ast}</td>
+          <td style="${getRankStyle(rankings.reb.get(p.name))}">${p.reb}</td>
+          <td style="${getRankStyle(rankings.oreb.get(p.name))}">${p.oreb}</td>
+          <td style="${getRankStyle(rankings.dreb.get(p.name))}">${p.dreb}</td>
+          <td style="${getRankStyle(rankings.ft_pct.get(p.name))}">${p.ft_pct !== '-' ? p.ft_pct + '%' : '-'}</td>
+          <td>${p.ftm}/${p.fta}</td>
+          <td style="${getRankStyle(rankings['3pt_pct'].get(p.name))}">${p['3pt_pct'] !== '-' ? p['3pt_pct'] + '%' : '-'}</td>
+          <td>${p['3ptm']}/${p['3pta']}</td>
+          <td style="${getRankStyle(rankings['2pt_pct'].get(p.name))}">${p['2pt_pct'] !== '-' ? p['2pt_pct'] + '%' : '-'}</td>
+          <td>${p['2ptm']}/${p['2pta']}</td>
+          <td style="${getRankStyle(rankings.fg_pct.get(p.name))}">${p.fg_pct !== '-' ? p.fg_pct + '%' : '-'}</td>
+          <td>${p.fgm}/${p.fga}</td>
+          <td style="${getRankStyle(rankings.pts.get(p.name))}">${p.ppg}</td>
+          <td style="${getRankStyle(rankings.min.get(p.name))}">${p.mpg}</td>
+          <td style="${getRankStyle(rankings.gp.get(p.name))}">${p.gp}</td>
+          <td>${p.age}</td>
+          <td>${p.height}</td>
+          <td class="name">${p.name}</td>
+          <td class="num">${p.number}</td>
         </tr>
       `).join('')}
     </tbody>
   </table>
 </div>
-      `;
-    };
+        `;
+      };
 
-    const htmlContent = `
+    const generateTeamPage = (teamName, players, isHome) => {
+        const rankings = {
+          gp: getTop3Rankings(players, 'games_played'),
+          min: getTop3Rankings(players, 'min'),
+          pts: getTop3Rankings(players, 'pts'),
+          fg_pct: getTop3Rankings(players, 'fg_pct'),
+          '2pt_pct': getTop3Rankings(players, '2pt_pct'),
+          '3pt_pct': getTop3Rankings(players, '3pt_pct'),
+          ft_pct: getTop3Rankings(players, 'ft_pct'),
+          dreb: getTop3Rankings(players, 'def'),
+          oreb: getTop3Rankings(players, 'off'),
+          reb: getTop3Rankings(players, 'reb'),
+          ast: getTop3Rankings(players, 'ast'),
+          stl: getTop3Rankings(players, 'stl'),
+          blk: getTop3Rankings(players, 'blk'),
+          to: getTop3Rankings(players, 'to'),
+          rate: getTop3Rankings(players, 'rate')
+        };
+
+        const getRankStyle = (rank) => {
+          if (rank === 1) return 'background: #e0e0e0; font-weight: bold;';
+          if (rank === 2) return 'background: #ececec; font-weight: bold;';
+          if (rank === 3) return 'background: #f5f5f5; font-weight: bold;';
+          return '';
+        };
+
+        return `
+<div class="page" style="page-break-after: ${isHome ? 'always' : 'auto'};">
+  <div class="header">
+    <h1>${teamName} (${isHome ? 'בית' : 'חוץ'})</h1>
+    <p>${game.date ? new Date(game.date).toLocaleDateString('he-IL') : ''} | ${game.time || ''} | ${game.venue || game.arena || ''}</p>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="last">משחק קודם</th>
+        <th class="st">מדד</th>
+        <th class="st">איב'</th>
+        <th class="st">חס'</th>
+        <th class="st">חט'</th>
+        <th class="st">אס'</th>
+        <th class="st">סה"כ ריב'</th>
+        <th class="st">ריב' התק'</th>
+        <th class="st">ריב' הג'</th>
+        <th class="st">% מהקו</th>
+        <th class="st">מהקו</th>
+        <th class="st">% ל-3</th>
+        <th class="st">ל-3</th>
+        <th class="st">% ל-2</th>
+        <th class="st">ל-2</th>
+        <th class="st">% מהשדה</th>
+        <th class="st">מהשדה</th>
+        <th class="st">נק'</th>
+        <th class="st">דק'</th>
+        <th class="st">מש'</th>
+        <th class="age">גיל</th>
+        <th class="h">גובה</th>
+        <th class="name">שם</th>
+        <th class="num">#</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${players.map(p => `
+        <tr>
+          <td class="last">${p.lastGameSummary}</td>
+          <td style="${getRankStyle(rankings.rate.get(p.name))}">${p.eff}</td>
+          <td style="${getRankStyle(rankings.to.get(p.name))}">${p.to}</td>
+          <td style="${getRankStyle(rankings.blk.get(p.name))}">${p.blk}</td>
+          <td style="${getRankStyle(rankings.stl.get(p.name))}">${p.stl}</td>
+          <td style="${getRankStyle(rankings.ast.get(p.name))}">${p.ast}</td>
+          <td style="${getRankStyle(rankings.reb.get(p.name))}">${p.reb}</td>
+          <td style="${getRankStyle(rankings.oreb.get(p.name))}">${p.oreb}</td>
+          <td style="${getRankStyle(rankings.dreb.get(p.name))}">${p.dreb}</td>
+          <td style="${getRankStyle(rankings.ft_pct.get(p.name))}">${p.ft_pct !== '-' ? p.ft_pct + '%' : '-'}</td>
+          <td>${p.ftm}/${p.fta}</td>
+          <td style="${getRankStyle(rankings['3pt_pct'].get(p.name))}">${p['3pt_pct'] !== '-' ? p['3pt_pct'] + '%' : '-'}</td>
+          <td>${p['3ptm']}/${p['3pta']}</td>
+          <td style="${getRankStyle(rankings['2pt_pct'].get(p.name))}">${p['2pt_pct'] !== '-' ? p['2pt_pct'] + '%' : '-'}</td>
+          <td>${p['2ptm']}/${p['2pta']}</td>
+          <td style="${getRankStyle(rankings.fg_pct.get(p.name))}">${p.fg_pct !== '-' ? p.fg_pct + '%' : '-'}</td>
+          <td>${p.fgm}/${p.fga}</td>
+          <td style="${getRankStyle(rankings.pts.get(p.name))}">${p.ppg}</td>
+          <td style="${getRankStyle(rankings.min.get(p.name))}">${p.mpg}</td>
+          <td style="${getRankStyle(rankings.gp.get(p.name))}">${p.gp}</td>
+          <td>${p.age}</td>
+          <td>${p.height}</td>
+          <td class="name">${p.name}</td>
+          <td class="num">${p.number}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+</div>
+        `;
+      };
+
+      return `
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
   <meta charset="UTF-8">
-  <title>${homeTeamName} נגד ${awayTeamName} - מורחב</title>
+  <title>${game.home_team} נגד ${game.away_team} - מורחב</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     @page { size: A4 landscape; margin: 6mm; }
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-      .page { page-break-after: always; }
+      .no-print { display: none !important; }
     }
     body { 
       font-family: Arial, sans-serif; 
-      font-size: 6pt; 
+      font-size: 5pt; 
       direction: rtl; 
       color: #000;
       background: #fff;
@@ -486,89 +740,121 @@ export default function GameDayPDFPage() {
     }
     .header { 
       text-align: center; 
-      margin-bottom: 3mm; 
-      padding: 2mm;
-      background: #e5e7eb;
+      margin-bottom: 2mm; 
+      padding: 1.5mm;
       border: 1px solid #000;
+      background: #e0e0e0;
     }
     .header h1 { 
-      font-size: 12pt; 
-      margin-bottom: 1mm;
+      font-size: 10pt; 
+      margin-bottom: 0.5mm;
       font-weight: bold;
     }
     .header p { 
-      font-size: 8pt;
-      color: #374151;
+      font-size: 6pt;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 5.5pt;
+      font-size: 5pt;
     }
     th {
-      background: #9ca3af;
+      background: #b0b0b0;
       color: #000;
-      padding: 1mm;
+      padding: 0.8mm 0.5mm;
       text-align: center;
       font-weight: bold;
       border: 1px solid #000;
+      font-size: 5pt;
     }
     td {
-      padding: 0.8mm 0.5mm;
+      padding: 0.6mm 0.4mm;
       text-align: center;
-      border: 1px solid #6b7280;
+      border: 1px solid #808080;
       vertical-align: middle;
       line-height: 1.2;
     }
     tr:nth-child(even) {
-      background: #f9fafb;
+      background: #fafafa;
     }
     tr:nth-child(odd) {
       background: #fff;
     }
-    .num { width: 20px; font-weight: bold; }
-    .name { width: 60px; text-align: right; padding-right: 2mm; }
-    .h { width: 30px; }
-    .age { width: 25px; }
-    .st { width: 32px; }
-    .last { width: 80px; text-align: right; padding-right: 1.5mm; font-size: 5pt; }
+    .num { width: 18px; font-weight: bold; }
+    .name { width: 55px; text-align: right; padding-right: 1.5mm; font-weight: 500; }
+    .h { width: 28px; }
+    .age { width: 22px; }
+    .st { width: 28px; }
+    .last { width: 70px; text-align: right; padding-right: 1mm; font-size: 4.5pt; }
   </style>
 </head>
 <body>
-  ${generateTeamPage(homeTeamName, homePlayers, true)}
-  ${generateTeamPage(awayTeamName, awayPlayers, false)}
+  ${generateTeamPage(game.home_team, homePlayers, true)}
+  ${generateTeamPage(game.away_team, awayPlayers, false)}
 </body>
 </html>
-    `;
+      `;
+    };
 
-    openPDF(htmlContent);
-  };
-
-  const openPDF = (htmlContent) => {
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    setGenerating(false);
-  };
-
-  React.useEffect(() => {
-    if (game && players.length > 0 && teams.length > 0 && !generating) {
+  useEffect(() => {
+    console.log('useEffect triggered - game:', !!game, 'players:', players.length, 'teams:', teams.length, 'pdfHtml:', !!pdfHtml);
+    if (game && players.length > 0 && teams.length > 0 && !pdfHtml) {
+      console.log('Calling generatePDF...');
       generatePDF();
     }
-  }, [game, players, teams, pdfType]);
+  }, [game, players, teams, pdfType, pdfHtml, gameId]);
 
-  if (!game) {
-    return <div className="p-6">משחק לא נמצא</div>;
+  if (!game && games.length > 0) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="mb-2 text-red-600 font-bold">משחק לא נמצא</p>
+          <p className="mb-2 text-sm text-gray-600">מחפש משחק עם ID: {gameId}</p>
+          <p className="mb-4 text-xs text-gray-500">
+            {games.length > 0 && `טעונים ${games.length} משחקים במערכת`}
+          </p>
+          <Button onClick={() => navigate(createPageUrl("Games"))}>
+            <ArrowLeft className="w-4 h-4 ml-2" />
+            חזרה למשחקים
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!game && games.length === 0) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="mb-4">טוען נתוני משחקים...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!pdfHtml) {
+    return (
+      <div className="p-6 min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p>טוען PDF...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 flex items-center justify-center min-h-screen">
-      {generating && (
-        <div className="flex items-center gap-3">
-          <Loader className="w-6 h-6 animate-spin" style={{ color: 'var(--accent)' }} />
-          <span>מייצר PDF...</span>
-        </div>
-      )}
+    <div>
+      <div className="no-print" style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 1000, background: 'white', padding: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', gap: '10px' }}>
+        <Button onClick={() => navigate(-1)} variant="outline" size="sm">
+          <ArrowLeft className="w-4 h-4 ml-2" />
+          חזרה
+        </Button>
+        <Button onClick={() => window.print()} size="sm" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
+          <Printer className="w-4 h-4 ml-2" />
+          הדפס
+        </Button>
+      </div>
+      <div dangerouslySetInnerHTML={{ __html: pdfHtml }} />
     </div>
   );
 }
