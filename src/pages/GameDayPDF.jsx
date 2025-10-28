@@ -273,10 +273,17 @@ export default function GameDayPDFPage() {
               return Math.round(Number(value));
             };
 
+            const formatHeight = (height) => {
+              if (!height) return '-';
+              const h = Number(height);
+              if (isNaN(h)) return '-';
+              return h.toFixed(2);
+            };
+
             return {
               number: player.jersey_number !== 999 ? player.jersey_number : '',
               name: player.name,
-              height: player.height ? `${player.height} ס"מ` : '-',
+              height: formatHeight(player.height),
               age: age || '-',
               birthDate: player.date_of_birth || '-',
               gp: stats?.games_played || 0,
