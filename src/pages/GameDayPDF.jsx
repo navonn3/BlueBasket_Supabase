@@ -487,21 +487,6 @@ export default function GameDayPDFPage() {
   };
 
   const generateExtendedPDF = (game, homePlayers, awayPlayers) => {
-    const getTop3Rankings = (players, statKey) => {
-      const rankings = new Map();
-      const validPlayers = players
-        .filter(p => p._stats && p._stats[statKey] !== null && p._stats[statKey] !== undefined)
-        .sort((a, b) => Number(b._stats[statKey]) - Number(a._stats[statKey]));
-      
-      validPlayers.forEach((player, index) => {
-        if (index < 3) {
-          rankings.set(player.name, index + 1);
-        }
-      });
-      
-      return rankings;
-    };
-
     const generateTeamPage = (teamName, players, isHome) => {
         const getTop3Rankings = (players, stat) => {
           const validPlayers = players
@@ -538,103 +523,6 @@ export default function GameDayPDFPage() {
           blk: getTop3Rankings(players, 'blk'),
           to: getTop3Rankings(players, 'to'),
           rate: getTop3Rankings(players, 'eff')
-        };
-
-        const getRankStyle = (rank) => {
-          if (rank === 1) return 'background: #e0e0e0; font-weight: bold;';
-          if (rank === 2) return 'background: #ececec; font-weight: bold;';
-          if (rank === 3) return 'background: #f5f5f5; font-weight: bold;';
-          return '';
-        };
-
-        return `
-<div class="page" style="page-break-after: ${isHome ? 'always' : 'auto'};">
-  <div class="header">
-    <h1>${teamName} (${isHome ? 'בית' : 'חוץ'})</h1>
-    <p>${game.date ? new Date(game.date).toLocaleDateString('he-IL') : ''} | ${game.time || ''} | ${game.venue || game.arena || ''}</p>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th class="last">משחק קודם</th>
-        <th class="st">מדד</th>
-        <th class="st">איב'</th>
-        <th class="st">חס'</th>
-        <th class="st">חט'</th>
-        <th class="st">אס'</th>
-        <th class="st">סה"כ ריב'</th>
-        <th class="st">ריב' התק'</th>
-        <th class="st">ריב' הג'</th>
-        <th class="st">% מהקו</th>
-        <th class="st">מהקו</th>
-        <th class="st">% ל-3</th>
-        <th class="st">ל-3</th>
-        <th class="st">% ל-2</th>
-        <th class="st">ל-2</th>
-        <th class="st">% מהשדה</th>
-        <th class="st">מהשדה</th>
-        <th class="st">נק'</th>
-        <th class="st">דק'</th>
-        <th class="st">מש'</th>
-        <th class="age">גיל</th>
-        <th class="h">גובה</th>
-        <th class="name">שם</th>
-        <th class="num">#</th>
-      </tr>
-    </thead>
-    <tbody>
-      ${players.map(p => `
-        <tr>
-          <td class="last">${p.lastGameSummary}</td>
-          <td style="${getRankStyle(rankings.rate.get(p.name))}">${p.eff}</td>
-          <td style="${getRankStyle(rankings.to.get(p.name))}">${p.to}</td>
-          <td style="${getRankStyle(rankings.blk.get(p.name))}">${p.blk}</td>
-          <td style="${getRankStyle(rankings.stl.get(p.name))}">${p.stl}</td>
-          <td style="${getRankStyle(rankings.ast.get(p.name))}">${p.ast}</td>
-          <td style="${getRankStyle(rankings.reb.get(p.name))}">${p.reb}</td>
-          <td style="${getRankStyle(rankings.oreb.get(p.name))}">${p.oreb}</td>
-          <td style="${getRankStyle(rankings.dreb.get(p.name))}">${p.dreb}</td>
-          <td style="${getRankStyle(rankings.ft_pct.get(p.name))}">${p.ft_pct !== '-' ? p.ft_pct + '%' : '-'}</td>
-          <td>${p.ftm}/${p.fta}</td>
-          <td style="${getRankStyle(rankings['3pt_pct'].get(p.name))}">${p['3pt_pct'] !== '-' ? p['3pt_pct'] + '%' : '-'}</td>
-          <td>${p['3ptm']}/${p['3pta']}</td>
-          <td style="${getRankStyle(rankings['2pt_pct'].get(p.name))}">${p['2pt_pct'] !== '-' ? p['2pt_pct'] + '%' : '-'}</td>
-          <td>${p['2ptm']}/${p['2pta']}</td>
-          <td style="${getRankStyle(rankings.fg_pct.get(p.name))}">${p.fg_pct !== '-' ? p.fg_pct + '%' : '-'}</td>
-          <td>${p.fgm}/${p.fga}</td>
-          <td style="${getRankStyle(rankings.pts.get(p.name))}">${p.ppg}</td>
-          <td style="${getRankStyle(rankings.min.get(p.name))}">${p.mpg}</td>
-          <td style="${getRankStyle(rankings.gp.get(p.name))}">${p.gp}</td>
-          <td>${p.age}</td>
-          <td>${p.height}</td>
-          <td class="name">${p.name}</td>
-          <td class="num">${p.number}</td>
-        </tr>
-      `).join('')}
-    </tbody>
-  </table>
-</div>
-        `;
-      };
-
-    const generateTeamPage = (teamName, players, isHome) => {
-        const rankings = {
-          gp: getTop3Rankings(players, 'games_played'),
-          min: getTop3Rankings(players, 'min'),
-          pts: getTop3Rankings(players, 'pts'),
-          fg_pct: getTop3Rankings(players, 'fg_pct'),
-          '2pt_pct': getTop3Rankings(players, '2pt_pct'),
-          '3pt_pct': getTop3Rankings(players, '3pt_pct'),
-          ft_pct: getTop3Rankings(players, 'ft_pct'),
-          dreb: getTop3Rankings(players, 'def'),
-          oreb: getTop3Rankings(players, 'off'),
-          reb: getTop3Rankings(players, 'reb'),
-          ast: getTop3Rankings(players, 'ast'),
-          stl: getTop3Rankings(players, 'stl'),
-          blk: getTop3Rankings(players, 'blk'),
-          to: getTop3Rankings(players, 'to'),
-          rate: getTop3Rankings(players, 'rate')
         };
 
         const getRankStyle = (rank) => {
