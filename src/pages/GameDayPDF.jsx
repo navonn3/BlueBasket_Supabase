@@ -401,36 +401,36 @@ export default function GameDayPDFPage() {
     }
     body { 
       font-family: Arial, sans-serif; 
-      font-size: 8pt; 
+      font-size: 10pt; 
       direction: rtl; 
       color: #000;
       background: #fff;
     }
     .header { 
       text-align: center; 
-      margin-bottom: 3mm; 
-      padding: 1.5mm;
+      margin-bottom: 4mm; 
+      padding: 2mm;
       background: #e0e0e0;
       border: 1px solid #000;
     }
     .header h1 { 
-      font-size: 12pt; 
-      margin-bottom: 0.5mm;
+      font-size: 16pt; 
+      margin-bottom: 1mm;
       font-weight: bold;
     }
     .header p { 
-      font-size: 8pt;
+      font-size: 11pt;
       color: #333;
     }
     .team-section {
-      margin-bottom: 2mm;
+      margin-bottom: 3mm;
       page-break-inside: avoid;
     }
     .team-title {
-      font-size: 10pt;
+      font-size: 13pt;
       font-weight: bold;
-      padding: 1.5mm;
-      margin-bottom: 1mm;
+      padding: 2mm;
+      margin-bottom: 2mm;
       border: 1px solid #000;
       background: #d0d0d0;
       color: #000;
@@ -438,23 +438,23 @@ export default function GameDayPDFPage() {
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 1mm;
+      margin-bottom: 2mm;
     }
     th {
       background: #b0b0b0;
-      padding: 1.2mm 0.8mm;
+      padding: 2mm 1mm;
       text-align: center;
       font-weight: bold;
       border: 1px solid #000;
-      font-size: 7.5pt;
+      font-size: 9.5pt;
     }
     td {
-      padding: 1mm 0.8mm;
+      padding: 1.5mm 1mm;
       text-align: center;
       border: 1px solid #808080;
-      font-size: 7pt;
+      font-size: 9pt;
       vertical-align: top;
-      line-height: 1.3;
+      line-height: 1.4;
     }
     tr:nth-child(even) {
       background: #f5f5f5;
@@ -462,12 +462,12 @@ export default function GameDayPDFPage() {
     tr:nth-child(odd) {
       background: #fff;
     }
-    .number-col { width: 30px; font-weight: bold; }
-    .name-col { width: 90px; text-align: right; padding-right: 2mm; }
-    .height-col { width: 40px; }
-    .age-col { width: 30px; }
-    .birth-col { width: 80px; }
-    .history-col { text-align: right; padding-right: 1.5mm; font-size: 5.5pt; line-height: 1.4; }
+    .number-col { width: 35px; font-weight: bold; }
+    .name-col { width: 110px; text-align: right; padding-right: 2.5mm; }
+    .height-col { width: 45px; }
+    .age-col { width: 35px; }
+    .birth-col { width: 90px; }
+    .history-col { text-align: right; padding-right: 2mm; font-size: 7.5pt; line-height: 1.5; }
   </style>
 </head>
 <body>
@@ -657,6 +657,7 @@ export default function GameDayPDFPage() {
         
         const formatStat = (val) => val ? Number(val).toFixed(1) : '-';
         const formatPct = (val) => val ? Math.round(Number(val)) : '-';
+        const formatRank = (rank) => rank ? `#${rank}` : '-';
         
         return `
         <tr style="background: #FFE082; font-weight: bold; border-top: 3px solid #000;">
@@ -683,6 +684,32 @@ export default function GameDayPDFPage() {
           <td>-</td>
           <td>-</td>
           <td class="name">ממוצע קבוצה</td>
+          <td class="num">-</td>
+        </tr>
+        <tr style="background: #FFF9C4; font-weight: bold; font-size: 4.5pt;">
+          <td class="last" style="text-align: center;">דירוג בליגה</td>
+          <td>${formatRank(teamAvg.rate_rank)}</td>
+          <td>${formatRank(teamAvg.to_rank)}</td>
+          <td>${formatRank(teamAvg.blk_rank)}</td>
+          <td>${formatRank(teamAvg.stl_rank)}</td>
+          <td>${formatRank(teamAvg.ast_rank)}</td>
+          <td>${formatRank(teamAvg.reb_rank)}</td>
+          <td>${formatRank(teamAvg.off_rank)}</td>
+          <td>${formatRank(teamAvg.def_rank)}</td>
+          <td>${formatRank(teamAvg.ft_pct_rank)}</td>
+          <td>-</td>
+          <td>${formatRank(teamAvg['3pt_pct_rank'])}</td>
+          <td>-</td>
+          <td>${formatRank(teamAvg['2pt_pct_rank'])}</td>
+          <td>-</td>
+          <td>${formatRank(teamAvg.fg_pct_rank)}</td>
+          <td>-</td>
+          <td>${formatRank(teamAvg.pts_rank)}</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td class="name">דירוג</td>
           <td class="num">-</td>
         </tr>
         `;
