@@ -73,7 +73,29 @@ export default function GameDayPDFPage() {
     initialData: [],
   });
 
-  // Fetch player season history
+  // חיפוש המשחק - תמיכה גם ב-game_id וגם ב-code
+  const game = games.find(g => {
+    // התאמה מדויקת
+    if (g.game_id === gameId) return true;
+    if (g.code === gameId) return true;
+    
+    // התאמה לא case-sensitive
+    if (g.game_id?.toLowerCase() === gameId?.toLowerCase()) return true;
+    if (g.code?.toLowerCase() === gameId?.toLowerCase()) return true;
+    
+    return false;
+  });
+
+  // Debug logging
+  console.log('GameDayPDF - Total games loaded:', games.length);
+  console.log('GameDayPDF - Looking for game with id:', gameId);
+  console.log('GameDayPDF - Found game:', game);
+  if (games.length > 0) {
+    console.log('GameDayPDF - Sample game_id format:', games[0].game_id);
+    console.log('GameDayPDF - First few game IDs:', games.slice(0, 3).map(g => g.game_id));
+  }
+
+  // Fetch player season history - אחרי שיש game!
   const { data: playerSeasonHistory } = useQuery({
     queryKey: ['playerSeasonHistory', game?.league_id],
     queryFn: async () => {
@@ -97,28 +119,6 @@ export default function GameDayPDFPage() {
     initialData: [],
     enabled: !!game, // טוען רק אחרי שיש משחק
   });
-
-  // חיפוש המשחק - תמיכה גם ב-game_id וגם ב-code
-  const game = games.find(g => {
-    // התאמה מדויקת
-    if (g.game_id === gameId) return true;
-    if (g.code === gameId) return true;
-    
-    // התאמה לא case-sensitive
-    if (g.game_id?.toLowerCase() === gameId?.toLowerCase()) return true;
-    if (g.code?.toLowerCase() === gameId?.toLowerCase()) return true;
-    
-    return false;
-  });
-
-  // Debug logging
-  console.log('GameDayPDF - Total games loaded:', games.length);
-  console.log('GameDayPDF - Looking for game with id:', gameId);
-  console.log('GameDayPDF - Found game:', game);
-  if (games.length > 0) {
-    console.log('GameDayPDF - Sample game_id format:', games[0].game_id);
-    console.log('GameDayPDF - First few game IDs:', games.slice(0, 3).map(g => g.game_id));
-  }
 
   const getTeamByName = (teamName) => {
     if (!teamName) return null;
