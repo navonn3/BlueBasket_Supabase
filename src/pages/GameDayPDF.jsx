@@ -73,6 +73,17 @@ export default function GameDayPDFPage() {
     initialData: [],
   });
 
+  // Fetch team averages
+  const { data: teamAverages } = useQuery({
+    queryKey: ['teamAverages'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('team_averages').select('*');
+      if (error) throw error;
+      return data || [];
+    },
+    initialData: [],
+  });
+
   // חיפוש המשחק - תמיכה גם ב-game_id וגם ב-code
   const game = games.find(g => {
     // התאמה מדויקת
@@ -636,6 +647,46 @@ export default function GameDayPDFPage() {
           <td class="num">${p.number}</td>
         </tr>
       `).join('')}
+      
+      ${(() => {
+        // מציאת הממוצעים הקבוצתיים
+        const team = teams.find(t => t.team_name === teamName && t.league_id === game.league_id);
+        const teamAvg = teamAverages.find(ta => ta.team_id === team?.team_id && ta.league_id === game.league_id);
+        
+        if (!teamAvg) return '';
+        
+        const formatStat = (val) => val ? Number(val).toFixed(1) : '-';
+        const formatPct = (val) => val ? Math.round(Number(val)) : '-';
+        
+        return `
+        <tr style="background: #FFE082; font-weight: bold; border-top: 3px solid #000;">
+          <td class="last" style="text-align: center;">ממוצע קבוצתי</td>
+          <td>${formatStat(teamAvg.rate)}</td>
+          <td>${formatStat(teamAvg.to)}</td>
+          <td>${formatStat(teamAvg.blk)}</td>
+          <td>${formatStat(teamAvg.stl)}</td>
+          <td>${formatStat(teamAvg.ast)}</td>
+          <td>${formatStat(teamAvg.reb)}</td>
+          <td>${formatStat(teamAvg.off)}</td>
+          <td>${formatStat(teamAvg.def)}</td>
+          <td>${formatPct(teamAvg.ft_pct)}%</td>
+          <td>${formatStat(teamAvg.ftm)}/${formatStat(teamAvg.fta)}</td>
+          <td>${formatPct(teamAvg['3pt_pct'])}%</td>
+          <td>${formatStat(teamAvg['3ptm'])}/${formatStat(teamAvg['3pta'])}</td>
+          <td>${formatPct(teamAvg['2pt_pct'])}%</td>
+          <td>${formatStat(teamAvg['2ptm'])}/${formatStat(teamAvg['2pta'])}</td>
+          <td>${formatPct(teamAvg.fg_pct)}%</td>
+          <td>${formatStat(teamAvg.fgm)}/${formatStat(teamAvg.fga)}</td>
+          <td>${formatStat(teamAvg.pts)}</td>
+          <td>-</td>
+          <td>${teamAvg.games_played || '-'}</td>
+          <td>-</td>
+          <td>-</td>
+          <td class="name">ממוצע קבוצה</td>
+          <td class="num">-</td>
+        </tr>
+        `;
+      })()}
     </tbody>
   </table>
 </div>
@@ -724,12 +775,30 @@ export default function GameDayPDFPage() {
     };
 
   useEffect(() => {
-    console.log('useEffect triggered - game:', !!game, 'players:', players.length, 'teams:', teams.length, 'playerAverages:', playerAverages.length, 'playerSeasonHistory:', playerSeasonHistory.length, 'pdfHtml:', !!pdfHtml);
-    if (game && players.length > 0 && teams.length > 0 && playerAverages.length > 0 && !pdfHtml) {
-      console.log('Calling generatePDF...');
+    console.log('useEffect triggered - game:', !!game, 'players:', players.length, 'teams:', teams.length, 'playerAverages:', playerAverages.length, 'playerSeasonHistory:', playerSeasonHistory.length, 'gamePlayerStats:', gamePlayerStats.length, 'pdfHtml:', !!pdfHtml);
+    
+    // ממתינים שכל הנתונים ייטענו לפני יצירת ה-PDF
+    const allDataLoaded = game && 
+                          players.length > 0 && 
+                          teams.length > 0 && 
+                          playerAverages.length > 0 && 
+                          gamePlayerStats.length > 0 &&
+                          playerSeasonHistory.length > 0;
+    
+    if (allDataLoaded && !pdfHtml) {
+      console.log('✅ All data loaded! Calling generatePDF...');
       generatePDF();
+    } else if (!pdfHtml) {
+      console.log('⏳ Waiting for data...', {
+        game: !!game,
+        players: players.length,
+        teams: teams.length,
+        playerAverages: playerAverages.length,
+        gamePlayerStats: gamePlayerStats.length,
+        playerSeasonHistory: playerSeasonHistory.length
+      });
     }
-  }, [game, players, teams, playerAverages, playerSeasonHistory, pdfType, pdfHtml, gameId]);
+  }, [game, players, teams, playerAverages, playerSeasonHistory, gamePlayerStats, pdfType, pdfHtml, gameId]);
 
   if (!game && games.length > 0) {
     return (
