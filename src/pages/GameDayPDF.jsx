@@ -75,13 +75,27 @@ export default function GameDayPDFPage() {
 
   // Fetch player season history
   const { data: playerSeasonHistory } = useQuery({
-    queryKey: ['playerSeasonHistory'],
+    queryKey: ['playerSeasonHistory', game?.league_id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('player_season_history').select('*');
+      let query = supabase.from('player_season_history').select('*');
+      
+      // אם יש לנו league_id, נסנן לפי זה
+      if (game?.league_id) {
+        query = query.eq('league_id', game.league_id);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
+      
+      console.log('playerSeasonHistory loaded:', data?.length || 0, 'records');
+      if (data && data.length > 0) {
+        console.log('Sample history record:', data[0]);
+      }
+      
       return data || [];
     },
     initialData: [],
+    enabled: !!game, // טוען רק אחרי שיש משחק
   });
 
   // חיפוש המשחק - תמיכה גם ב-game_id וגם ב-code
@@ -240,15 +254,26 @@ export default function GameDayPDFPage() {
               lastGameSummary = 'לא שיחק';
             }
 
+            // Debug: בדיקת playerSeasonHistory
+            console.log('=== DEBUG HISTORY FOR:', player.name, '===');
+            console.log('Player ID:', player.player_id);
+            console.log('Total playerSeasonHistory records in DB:', playerSeasonHistory.length);
+            
             const teamHistory = playerSeasonHistory
-              .filter(sh => sh.player_id === player.player_id)
+              .filter(sh => {
+                const match = sh.player_id === player.player_id;
+                if (match) {
+                  console.log('Found history match:', sh);
+                }
+                return match;
+              })
               .map(sh => ({ 
                 season: sh.season, 
                 team: sh.team_name,
                 league: sh.league_name 
               }));
 
-            console.log(`Player ${player.name} history:`, teamHistory);
+            console.log(`Player ${player.name} (${player.player_id}) - Found ${teamHistory.length} history records:`, teamHistory);
 
             // יצירת רשימת ההיסטוריה - מציג את כל העונות שיש לנו
             let previousTeams;
