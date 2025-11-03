@@ -724,12 +724,12 @@ export default function GameDayPDFPage() {
     };
 
   useEffect(() => {
-    console.log('useEffect triggered - game:', !!game, 'players:', players.length, 'teams:', teams.length, 'pdfHtml:', !!pdfHtml);
-    if (game && players.length > 0 && teams.length > 0 && !pdfHtml) {
+    console.log('useEffect triggered - game:', !!game, 'players:', players.length, 'teams:', teams.length, 'playerAverages:', playerAverages.length, 'playerSeasonHistory:', playerSeasonHistory.length, 'pdfHtml:', !!pdfHtml);
+    if (game && players.length > 0 && teams.length > 0 && playerAverages.length > 0 && !pdfHtml) {
       console.log('Calling generatePDF...');
       generatePDF();
     }
-  }, [game, players, teams, pdfType, pdfHtml, gameId]);
+  }, [game, players, teams, playerAverages, playerSeasonHistory, pdfType, pdfHtml, gameId]);
 
   if (!game && games.length > 0) {
     return (
