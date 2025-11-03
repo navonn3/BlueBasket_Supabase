@@ -300,8 +300,8 @@ export default function GameDayPDFPage() {
               // הגבלה ל-5 העונות האחרונות
               previousTeams = sortedHistory
                 .slice(0, 5)
-                .map(h => `${h.season}: ${h.team}`)
-                .join(' | ');
+                .map(h => `<strong>${h.season}</strong>: ${h.team} (${h.league})`)
+                .join('  |  ');
             } else {
               previousTeams = 'אין היסטוריה';
             }
