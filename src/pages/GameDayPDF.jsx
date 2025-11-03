@@ -401,36 +401,36 @@ export default function GameDayPDFPage() {
     }
     body { 
       font-family: Arial, sans-serif; 
-      font-size: 10pt; 
+      font-size: 8.5pt; 
       direction: rtl; 
       color: #000;
       background: #fff;
     }
     .header { 
       text-align: center; 
-      margin-bottom: 4mm; 
-      padding: 2mm;
+      margin-bottom: 3mm; 
+      padding: 1.5mm;
       background: #e0e0e0;
       border: 1px solid #000;
     }
     .header h1 { 
-      font-size: 16pt; 
-      margin-bottom: 1mm;
+      font-size: 14pt; 
+      margin-bottom: 0.8mm;
       font-weight: bold;
     }
     .header p { 
-      font-size: 11pt;
+      font-size: 9pt;
       color: #333;
     }
     .team-section {
-      margin-bottom: 3mm;
+      margin-bottom: 2mm;
       page-break-inside: avoid;
     }
     .team-title {
-      font-size: 13pt;
+      font-size: 11pt;
       font-weight: bold;
-      padding: 2mm;
-      margin-bottom: 2mm;
+      padding: 1.5mm;
+      margin-bottom: 1.5mm;
       border: 1px solid #000;
       background: #d0d0d0;
       color: #000;
@@ -438,23 +438,23 @@ export default function GameDayPDFPage() {
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 2mm;
+      margin-bottom: 1.5mm;
     }
     th {
       background: #b0b0b0;
-      padding: 2mm 1mm;
+      padding: 1.5mm 0.8mm;
       text-align: center;
       font-weight: bold;
       border: 1px solid #000;
-      font-size: 9.5pt;
+      font-size: 8.5pt;
     }
     td {
-      padding: 1.5mm 1mm;
+      padding: 1.2mm 0.8mm;
       text-align: center;
       border: 1px solid #808080;
-      font-size: 9pt;
+      font-size: 8pt;
       vertical-align: top;
-      line-height: 1.4;
+      line-height: 1.35;
     }
     tr:nth-child(even) {
       background: #f5f5f5;
@@ -462,12 +462,12 @@ export default function GameDayPDFPage() {
     tr:nth-child(odd) {
       background: #fff;
     }
-    .number-col { width: 35px; font-weight: bold; }
-    .name-col { width: 110px; text-align: right; padding-right: 2.5mm; }
-    .height-col { width: 45px; }
-    .age-col { width: 35px; }
-    .birth-col { width: 90px; }
-    .history-col { text-align: right; padding-right: 2mm; font-size: 7.5pt; line-height: 1.5; }
+    .number-col { width: 32px; font-weight: bold; }
+    .name-col { width: 100px; text-align: right; padding-right: 2mm; }
+    .height-col { width: 42px; }
+    .age-col { width: 32px; }
+    .birth-col { width: 85px; }
+    .history-col { text-align: right; padding-right: 1.8mm; font-size: 6.5pt; line-height: 1.45; }
   </style>
 </head>
 <body>
@@ -716,6 +716,29 @@ export default function GameDayPDFPage() {
       })()}
     </tbody>
   </table>
+  
+  ${(() => {
+    // מציאת הממוצעים הקבוצתיים לנתונים נוספים
+    const team = teams.find(t => t.team_name === teamName && t.league_id === game.league_id);
+    const teamAvg = teamAverages.find(ta => ta.team_id === team?.team_id && ta.league_id === game.league_id);
+    
+    if (!teamAvg) return '';
+    
+    const formatStat = (val) => val ? Number(val).toFixed(1) : '-';
+    const formatRank = (rank) => rank ? `#${rank}` : '-';
+    
+    return `
+    <div style="margin-top: 2mm; padding: 1.5mm; background: #f0f0f0; border: 1px solid #999; font-size: 5pt; line-height: 1.6;">
+      <strong style="font-size: 5.5pt;">נתונים נוספים:</strong>
+      <span style="margin: 0 3mm;">• נק' ספיגה: <strong>${formatStat(teamAvg.pts_allowed)}</strong> (${formatRank(teamAvg.pts_allowed_rank)})</span>
+      <span style="margin: 0 3mm;">• נק' מהזדמנות שנייה: <strong>${formatStat(teamAvg.second_chance_pts)}</strong></span>
+      <span style="margin: 0 3mm;">• נק' מאיבודים: <strong>${formatStat(teamAvg.pts_off_turnovers)}</strong></span>
+      <span style="margin: 0 3mm;">• נק' מהפסקות מהירות: <strong>${formatStat(teamAvg.fast_break_pts)}</strong></span>
+      <span style="margin: 0 3mm;">• נק' מהצבע: <strong>${formatStat(teamAvg.points_in_paint)}</strong></span>
+      <span style="margin: 0 3mm;">• נק' ספסל: <strong>${formatStat(teamAvg.bench_pts)}</strong></span>
+    </div>
+    `;
+  })()}
 </div>
         `;
       };
