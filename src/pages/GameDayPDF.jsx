@@ -380,13 +380,6 @@ export default function GameDayPDFPage() {
       }
 
       setPdfHtml(htmlContent);
-      
-      // פתיחת ה-HTML בחלון נפרד להדפסה
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(htmlContent);
-        printWindow.document.close();
-      }
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
@@ -599,59 +592,59 @@ export default function GameDayPDFPage() {
   <table>
     <thead>
       <tr>
-        <th class="last">משחק קודם</th>
-        <th class="st">מדד</th>
-        <th class="st">איב'</th>
-        <th class="st">חס'</th>
-        <th class="st">חט'</th>
-        <th class="st">אס'</th>
-        <th class="st">סה"כ ריב'</th>
-        <th class="st">ריב' התק'</th>
-        <th class="st">ריב' הג'</th>
-        <th class="st">% מהקו</th>
-        <th class="st">מהקו</th>
-        <th class="st">% ל-3</th>
-        <th class="st">ל-3</th>
-        <th class="st">% ל-2</th>
-        <th class="st">ל-2</th>
-        <th class="st">% מהשדה</th>
-        <th class="st">מהשדה</th>
-        <th class="st">נק'</th>
-        <th class="st">דק'</th>
-        <th class="st">מש'</th>
-        <th class="age">גיל</th>
-        <th class="h">גובה</th>
-        <th class="name">שם</th>
         <th class="num">#</th>
+        <th class="name">שם</th>
+        <th class="h">גובה</th>
+        <th class="age">גיל</th>
+        <th class="st">מש'</th>
+        <th class="st">דק'</th>
+        <th class="st">נק'</th>
+        <th class="st">מהשדה</th>
+        <th class="st">% מהשדה</th>
+        <th class="st">ל-2</th>
+        <th class="st">% ל-2</th>
+        <th class="st">ל-3</th>
+        <th class="st">% ל-3</th>
+        <th class="st">מהקו</th>
+        <th class="st">% מהקו</th>
+        <th class="st">ריב' הג'</th>
+        <th class="st">ריב' התק'</th>
+        <th class="st">סה"כ ריב'</th>
+        <th class="st">אס'</th>
+        <th class="st">חט'</th>
+        <th class="st">חס'</th>
+        <th class="st">איב'</th>
+        <th class="st">מדד</th>
+        <th class="last">משחק קודם</th>
       </tr>
     </thead>
     <tbody>
       ${players.map(p => `
         <tr>
-          <td class="last">${p.lastGameSummary}</td>
-          <td style="${getRankStyle(rankings.rate.get(p.name))}">${p.eff}</td>
-          <td style="${getRankStyle(rankings.to.get(p.name))}">${p.to}</td>
-          <td style="${getRankStyle(rankings.blk.get(p.name))}">${p.blk}</td>
-          <td style="${getRankStyle(rankings.stl.get(p.name))}">${p.stl}</td>
-          <td style="${getRankStyle(rankings.ast.get(p.name))}">${p.ast}</td>
-          <td style="${getRankStyle(rankings.reb.get(p.name))}">${p.reb}</td>
-          <td style="${getRankStyle(rankings.oreb.get(p.name))}">${p.oreb}</td>
-          <td style="${getRankStyle(rankings.dreb.get(p.name))}">${p.dreb}</td>
-          <td style="${getRankStyle(rankings.ft_pct.get(p.name))}">${p.ft_pct !== '-' ? p.ft_pct + '%' : '-'}</td>
-          <td>${p.ftm}/${p.fta}</td>
-          <td style="${getRankStyle(rankings['3pt_pct'].get(p.name))}">${p['3pt_pct'] !== '-' ? p['3pt_pct'] + '%' : '-'}</td>
-          <td>${p['3ptm']}/${p['3pta']}</td>
-          <td style="${getRankStyle(rankings['2pt_pct'].get(p.name))}">${p['2pt_pct'] !== '-' ? p['2pt_pct'] + '%' : '-'}</td>
-          <td>${p['2ptm']}/${p['2pta']}</td>
-          <td style="${getRankStyle(rankings.fg_pct.get(p.name))}">${p.fg_pct !== '-' ? p.fg_pct + '%' : '-'}</td>
-          <td>${p.fgm}/${p.fga}</td>
-          <td style="${getRankStyle(rankings.pts.get(p.name))}">${p.ppg}</td>
-          <td style="${getRankStyle(rankings.min.get(p.name))}">${p.mpg}</td>
-          <td style="${getRankStyle(rankings.gp.get(p.name))}">${p.gp}</td>
-          <td>${p.age}</td>
-          <td>${p.height}</td>
-          <td class="name">${p.name}</td>
           <td class="num">${p.number}</td>
+          <td class="name">${p.name}</td>
+          <td>${p.height}</td>
+          <td>${p.age}</td>
+          <td style="${getRankStyle(rankings.gp.get(p.name))}">${p.gp}</td>
+          <td style="${getRankStyle(rankings.min.get(p.name))}">${p.mpg}</td>
+          <td style="${getRankStyle(rankings.pts.get(p.name))}">${p.ppg}</td>
+          <td>${p.fgm}/${p.fga}</td>
+          <td style="${getRankStyle(rankings.fg_pct.get(p.name))}">${p.fg_pct !== '-' ? p.fg_pct + '%' : '-'}</td>
+          <td>${p['2ptm']}/${p['2pta']}</td>
+          <td style="${getRankStyle(rankings['2pt_pct'].get(p.name))}">${p['2pt_pct'] !== '-' ? p['2pt_pct'] + '%' : '-'}</td>
+          <td>${p['3ptm']}/${p['3pta']}</td>
+          <td style="${getRankStyle(rankings['3pt_pct'].get(p.name))}">${p['3pt_pct'] !== '-' ? p['3pt_pct'] + '%' : '-'}</td>
+          <td>${p.ftm}/${p.fta}</td>
+          <td style="${getRankStyle(rankings.ft_pct.get(p.name))}">${p.ft_pct !== '-' ? p.ft_pct + '%' : '-'}</td>
+          <td style="${getRankStyle(rankings.dreb.get(p.name))}">${p.dreb}</td>
+          <td style="${getRankStyle(rankings.oreb.get(p.name))}">${p.oreb}</td>
+          <td style="${getRankStyle(rankings.reb.get(p.name))}">${p.reb}</td>
+          <td style="${getRankStyle(rankings.ast.get(p.name))}">${p.ast}</td>
+          <td style="${getRankStyle(rankings.stl.get(p.name))}">${p.stl}</td>
+          <td style="${getRankStyle(rankings.blk.get(p.name))}">${p.blk}</td>
+          <td style="${getRankStyle(rankings.to.get(p.name))}">${p.to}</td>
+          <td style="${getRankStyle(rankings.rate.get(p.name))}">${p.eff}</td>
+          <td class="last">${p.lastGameSummary}</td>
         </tr>
       `).join('')}
       
@@ -668,56 +661,56 @@ export default function GameDayPDFPage() {
         
         return `
         <tr style="background: #FFE082; font-weight: bold; border-top: 3px solid #000;">
-          <td class="last" style="text-align: center;">ממוצע קבוצתי</td>
-          <td>${formatStat(teamAvg.rate)}</td>
-          <td>${formatStat(teamAvg.to)}</td>
-          <td>${formatStat(teamAvg.blk)}</td>
-          <td>${formatStat(teamAvg.stl)}</td>
-          <td>${formatStat(teamAvg.ast)}</td>
-          <td>${formatStat(teamAvg.reb)}</td>
-          <td>${formatStat(teamAvg.off)}</td>
-          <td>${formatStat(teamAvg.def)}</td>
-          <td>${formatPct(teamAvg.ft_pct)}%</td>
-          <td>${formatStat(teamAvg.ftm)}/${formatStat(teamAvg.fta)}</td>
-          <td>${formatPct(teamAvg['3pt_pct'])}%</td>
-          <td>${formatStat(teamAvg['3ptm'])}/${formatStat(teamAvg['3pta'])}</td>
-          <td>${formatPct(teamAvg['2pt_pct'])}%</td>
-          <td>${formatStat(teamAvg['2ptm'])}/${formatStat(teamAvg['2pta'])}</td>
-          <td>${formatPct(teamAvg.fg_pct)}%</td>
-          <td>${formatStat(teamAvg.fgm)}/${formatStat(teamAvg.fga)}</td>
-          <td>${formatStat(teamAvg.pts)}</td>
+          <td class="num">-</td>
+          <td class="name">ממוצע קבוצה</td>
+          <td>-</td>
           <td>-</td>
           <td>${teamAvg.games_played || '-'}</td>
           <td>-</td>
-          <td>-</td>
-          <td class="name">ממוצע קבוצה</td>
-          <td class="num">-</td>
+          <td>${formatStat(teamAvg.pts)}</td>
+          <td>${formatStat(teamAvg.fgm)}/${formatStat(teamAvg.fga)}</td>
+          <td>${formatPct(teamAvg.fg_pct)}%</td>
+          <td>${formatStat(teamAvg['2ptm'])}/${formatStat(teamAvg['2pta'])}</td>
+          <td>${formatPct(teamAvg['2pt_pct'])}%</td>
+          <td>${formatStat(teamAvg['3ptm'])}/${formatStat(teamAvg['3pta'])}</td>
+          <td>${formatPct(teamAvg['3pt_pct'])}%</td>
+          <td>${formatStat(teamAvg.ftm)}/${formatStat(teamAvg.fta)}</td>
+          <td>${formatPct(teamAvg.ft_pct)}%</td>
+          <td>${formatStat(teamAvg.def)}</td>
+          <td>${formatStat(teamAvg.off)}</td>
+          <td>${formatStat(teamAvg.reb)}</td>
+          <td>${formatStat(teamAvg.ast)}</td>
+          <td>${formatStat(teamAvg.stl)}</td>
+          <td>${formatStat(teamAvg.blk)}</td>
+          <td>${formatStat(teamAvg.to)}</td>
+          <td>${formatStat(teamAvg.rate)}</td>
+          <td class="last" style="text-align: center;">ממוצע קבוצתי</td>
         </tr>
-        <tr style="background: #FFF9C4; font-weight: bold; font-size: 4.5pt;">
-          <td class="last" style="text-align: center;">דירוג בליגה</td>
-          <td>${formatRank(teamAvg.rate_rank)}</td>
-          <td>${formatRank(teamAvg.to_rank)}</td>
-          <td>${formatRank(teamAvg.blk_rank)}</td>
-          <td>${formatRank(teamAvg.stl_rank)}</td>
-          <td>${formatRank(teamAvg.ast_rank)}</td>
-          <td>${formatRank(teamAvg.reb_rank)}</td>
-          <td>${formatRank(teamAvg.off_rank)}</td>
-          <td>${formatRank(teamAvg.def_rank)}</td>
-          <td>${formatRank(teamAvg.ft_pct_rank)}</td>
+        <tr style="background: #FFF9C4; font-weight: bold; font-size: 6pt;">
+          <td class="num">-</td>
+          <td class="name">דירוג</td>
           <td>-</td>
-          <td>${formatRank(teamAvg['3pt_pct_rank'])}</td>
           <td>-</td>
-          <td>${formatRank(teamAvg['2pt_pct_rank'])}</td>
           <td>-</td>
-          <td>${formatRank(teamAvg.fg_pct_rank)}</td>
           <td>-</td>
           <td>${formatRank(teamAvg.pts_rank)}</td>
           <td>-</td>
+          <td>${formatRank(teamAvg.fg_pct_rank)}</td>
           <td>-</td>
+          <td>${formatRank(teamAvg['2pt_pct_rank'])}</td>
           <td>-</td>
+          <td>${formatRank(teamAvg['3pt_pct_rank'])}</td>
           <td>-</td>
-          <td class="name">דירוג</td>
-          <td class="num">-</td>
+          <td>${formatRank(teamAvg.ft_pct_rank)}</td>
+          <td>${formatRank(teamAvg.def_rank)}</td>
+          <td>${formatRank(teamAvg.off_rank)}</td>
+          <td>${formatRank(teamAvg.reb_rank)}</td>
+          <td>${formatRank(teamAvg.ast_rank)}</td>
+          <td>${formatRank(teamAvg.stl_rank)}</td>
+          <td>${formatRank(teamAvg.blk_rank)}</td>
+          <td>${formatRank(teamAvg.to_rank)}</td>
+          <td>${formatRank(teamAvg.rate_rank)}</td>
+          <td class="last" style="text-align: center;">דירוג בליגה</td>
         </tr>
         `;
       })()}
@@ -765,7 +758,7 @@ export default function GameDayPDFPage() {
     }
     body { 
       font-family: Arial, sans-serif; 
-      font-size: 5pt; 
+      font-size: 7pt; 
       direction: rtl; 
       color: #000;
       background: #fff;
@@ -780,40 +773,40 @@ export default function GameDayPDFPage() {
     }
     .header { 
       text-align: center; 
-      margin-bottom: 2mm; 
-      padding: 1.5mm;
+      margin-bottom: 3mm; 
+      padding: 2mm;
       border: 1px solid #000;
       background: #e0e0e0;
     }
     .header h1 { 
-      font-size: 10pt; 
-      margin-bottom: 0.5mm;
+      font-size: 13pt; 
+      margin-bottom: 1mm;
       font-weight: bold;
     }
     .header p { 
-      font-size: 6pt;
+      font-size: 8pt;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 5pt;
+      font-size: 7pt;
       page-break-inside: avoid;
     }
     th {
       background: #b0b0b0;
       color: #000;
-      padding: 0.8mm 0.5mm;
+      padding: 1.2mm 0.8mm;
       text-align: center;
       font-weight: bold;
       border: 1px solid #000;
-      font-size: 5pt;
+      font-size: 7pt;
     }
     td {
-      padding: 0.6mm 0.4mm;
+      padding: 1mm 0.6mm;
       text-align: center;
       border: 1px solid #808080;
       vertical-align: middle;
-      line-height: 1.2;
+      line-height: 1.3;
     }
     tr:nth-child(even) {
       background: #fafafa;
@@ -821,12 +814,12 @@ export default function GameDayPDFPage() {
     tr:nth-child(odd) {
       background: #fff;
     }
-    .num { width: 18px; font-weight: bold; }
-    .name { width: 55px; text-align: right; padding-right: 1.5mm; font-weight: 500; }
-    .h { width: 28px; }
-    .age { width: 22px; }
-    .st { width: 28px; }
-    .last { width: 70px; text-align: right; padding-right: 1mm; font-size: 4.5pt; }
+    .num { width: 22px; font-weight: bold; }
+    .name { width: 70px; text-align: right; padding-right: 2mm; font-weight: 500; }
+    .h { width: 35px; }
+    .age { width: 28px; }
+    .st { width: 35px; }
+    .last { width: 90px; text-align: right; padding-right: 1.5mm; font-size: 6pt; }
   </style>
 </head>
 <body>
@@ -901,37 +894,19 @@ export default function GameDayPDFPage() {
     );
   }
 
-  // אם ה-PDF נוצר, מציג הודעה
   return (
-    <div className="p-6 min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="mb-4">
-          <Printer className="w-16 h-16 mx-auto mb-4 text-green-600" />
-          <h2 className="text-xl font-bold mb-2">PDF נפתח בחלון חדש</h2>
-          <p className="text-gray-600 mb-4">
-            אם החלון לא נפתח, אנא אפשר חלונות קופצים (pop-ups) בדפדפן
-          </p>
-        </div>
-        <div className="flex gap-3 justify-center">
-          <Button onClick={() => navigate(createPageUrl("Games"))} variant="outline">
-            <ArrowLeft className="w-4 h-4 ml-2" />
-            חזרה למשחקים
-          </Button>
-          <Button 
-            onClick={() => {
-              const printWindow = window.open('', '_blank');
-              if (printWindow) {
-                printWindow.document.write(pdfHtml);
-                printWindow.document.close();
-              }
-            }}
-            style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-          >
-            <Printer className="w-4 h-4 ml-2" />
-            פתח שוב
-          </Button>
-        </div>
+    <div>
+      <div className="no-print" style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 1000, background: 'white', padding: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', gap: '10px' }}>
+        <Button onClick={() => navigate(-1)} variant="outline" size="sm">
+          <ArrowLeft className="w-4 h-4 ml-2" />
+          חזרה
+        </Button>
+        <Button onClick={() => window.print()} size="sm" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
+          <Printer className="w-4 h-4 ml-2" />
+          הדפס
+        </Button>
       </div>
+      <div dangerouslySetInnerHTML={{ __html: pdfHtml }} />
     </div>
   );
 }
