@@ -211,13 +211,18 @@ export default function GameDayPDFPage() {
               try {
                 // תמיכה בפורמטים שונים של תאריך
                 let birth;
-                if (birthDate.includes('/')) {
-                  const parts = birthDate.split('/');
-                  birth = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
-                } else {
+                if (birthDate.includes('-')) {
                   birth = new Date(birthDate);
+                } else if (birthDate.includes('/')) {
+                  const parts = birthDate.split('/');
+                  if (parts[2].length === 4) {
+                    birth = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                  } else {
+                    birth = new Date(`20${parts[2]}-${parts[1]}-${parts[0]}`);
+                  }
+                } else {
+                  return null;
                 }
-                
                 const today = new Date();
                 let age = today.getFullYear() - birth.getFullYear();
                 const monthDiff = today.getMonth() - birth.getMonth();
@@ -225,113 +230,125 @@ export default function GameDayPDFPage() {
                   age--;
                 }
                 return age;
-              } catch {
+              } catch (error) {
+                console.error('Error calculating age for:', birthDate, error);
                 return null;
               }
             };
 
-            const age = calculateAge(player.date_of_birth);
-
-            const playerGameHistory = gamePlayerStats
-              .filter(gs => gs.player_id === player.player_id)
-              .sort((a, b) => {
-                if (!a.game_date || !b.game_date) return 0;
-                return new Date(b.game_date) - new Date(a.game_date);
-              });
-
-            const lastGame = playerGameHistory[0];
-            let lastGameSummary = '';
-            
-            if (lastGame) {
-              if (!lastGame.min || lastGame.min < 5) {
-                lastGameSummary = lastGame.min === 0 ? 'לא שיחק' : 'דקות מעטות';
-              } else {
-                const parts = [];
-                const pts = lastGame.pts || 0;
-                parts.push(`${pts} נק'`);
-                
-                if (lastGame.reb >= 4) parts.push(`${lastGame.reb} ריב'`);
-                if (lastGame.ast >= 3) parts.push(`${lastGame.ast} אס'`);
-                if (lastGame.stl >= 2) parts.push(`${lastGame.stl} חט'`);
-                if (lastGame.blk >= 2) parts.push(`${lastGame.blk} בלו'`);
-                
-                if (pts >= 12 && lastGame.fga >= 5 && lastGame.fg_pct) {
-                  parts.push(`${Math.round(lastGame.fg_pct)}% FG`);
-                }
-                
-                lastGameSummary = parts.join(', ');
+            const formatBirthDate = (birthDate) => {
+              if (!birthDate) return '';
+              try {
+                const date = new Date(birthDate);
+                if (isNaN(date.getTime())) return '';
+                const day = date.getDate().toString().padStart(2, '0');
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const year = date.getFullYear();
+                return `${day}-${month}-${year}`;
+              } catch {
+                return '';
               }
-            } else {
-              lastGameSummary = 'לא שיחק';
-            }
+            };
 
-            // Debug: בדיקת playerSeasonHistory
-            console.log('=== DEBUG HISTORY FOR:', player.name, '===');
-            console.log('Player ID:', player.player_id);
-            console.log('Total playerSeasonHistory records in DB:', playerSeasonHistory.length);
-            
-            const teamHistory = playerSeasonHistory
-              .filter(sh => {
-                const match = sh.player_id === player.player_id;
-                if (match) {
-                  console.log('Found history match:', sh);
-                }
-                return match;
-              })
-              .map(sh => ({ 
-                season: sh.season, 
-                team: sh.team_name,
-                league: sh.league_name 
-              }));
-
-            console.log(`Player ${player.name} (${player.player_id}) - Found ${teamHistory.length} history records:`, teamHistory);
-
-            // יצירת רשימת ההיסטוריה - מציג את כל העונות שיש לנו
-            let previousTeams;
-            if (teamHistory.length > 0) {
-              // מיון לפי עונה (מהחדש לישן)
-              const sortedHistory = teamHistory.sort((a, b) => {
-                // המרת "2024-25" ל-2024 להשוואה
-                const yearA = parseInt(a.season.split('-')[0]);
-                const yearB = parseInt(b.season.split('-')[0]);
-                return yearB - yearA;
+            const getPlayerHistory = (playerId) => {
+              const history = playerSeasonHistory.filter(h => h.player_id === playerId);
+              
+              if (history.length === 0) return '';
+              
+              history.sort((a, b) => {
+                const seasonA = a.season || '';
+                const seasonB = b.season || '';
+                return seasonB.localeCompare(seasonA);
               });
-
-              // הגבלה ל-5 העונות האחרונות
-              previousTeams = sortedHistory
-                .slice(0, 5)
-                .map(h => `<strong>${h.season}</strong>: ${h.team} (${h.league})`)
-                .join('  |  ');
-            } else {
-              previousTeams = 'אין היסטוריה';
-            }
-
-            const formatStat = (value, decimals = 1) => {
-              if (value === null || value === undefined) return '-';
-              return Number(value).toFixed(decimals);
+              
+              const teamsByLeague = new Map();
+              
+              history.forEach(h => {
+                const leagueKey = h.league_id;
+                if (!teamsByLeague.has(leagueKey)) {
+                  teamsByLeague.set(leagueKey, {
+                    leagueId: h.league_id,
+                    leagueName: h.league_name || '',
+                    teams: []
+                  });
+                }
+                
+                const leagueData = teamsByLeague.get(leagueKey);
+                if (!leagueData.teams.some(t => t.name === h.team_name && t.season === h.season)) {
+                  leagueData.teams.push({
+                    name: h.team_name,
+                    season: h.season
+                  });
+                }
+              });
+              
+              const currentLeagueId = game.league_id;
+              const historyParts = [];
+              
+              teamsByLeague.forEach((leagueData, leagueId) => {
+                if (leagueId === currentLeagueId) {
+                  const teams = leagueData.teams
+                    .filter(t => t.name !== team.team_name)
+                    .map(t => `${t.name} (${t.season})`)
+                    .join(' | ');
+                  if (teams) {
+                    historyParts.push(teams);
+                  }
+                } else {
+                  const teams = leagueData.teams.map(t => `${t.name} (${t.season})`).join(' | ');
+                  if (teams) {
+                    historyParts.push(`${leagueData.leagueName}: ${teams}`);
+                  }
+                }
+              });
+              
+              return historyParts.join(' || ');
             };
 
-            const formatPercentage = (value) => {
-              if (value === null || value === undefined || value === 0) return '-';
-              return Math.round(Number(value));
+            const getLastGameSummary = (playerId) => {
+              const playerGames = gamePlayerStats.filter(gs => 
+                gs.player_id === playerId && gs.league_id === game.league_id
+              );
+              
+              if (playerGames.length === 0) return '';
+              
+              const sortedGames = [...playerGames].sort((a, b) => {
+                if (!a.date || !b.date) return 0;
+                return new Date(b.date) - new Date(a.date);
+              });
+              
+              const lastGame = sortedGames[0];
+              if (!lastGame) return '';
+              
+              const parts = [];
+              if (lastGame.pts) parts.push(`${lastGame.pts} נק'`);
+              if (lastGame.reb) parts.push(`${lastGame.reb} ריב'`);
+              if (lastGame.ast) parts.push(`${lastGame.ast} אס'`);
+              if (lastGame.stl) parts.push(`${lastGame.stl} חט'`);
+              if (lastGame.fg_pct) {
+                const fgPct = Math.round(lastGame.fg_pct);
+                parts.push(`${fgPct}% FG`);
+              }
+              
+              return parts.join(', ');
             };
 
-            const formatHeight = (height) => {
-              if (!height) return '-';
-              const h = Number(height);
-              if (isNaN(h)) return '-';
-              return h.toFixed(2);
-            };
+            const formatStat = (val) => val ? Number(val).toFixed(1) : '-';
+            const formatPercentage = (val) => val ? Math.round(Number(val)) : '-';
+
+            const age = calculateAge(player.date_of_birth);
+            const previousTeams = getPlayerHistory(player.player_id);
+            const lastGameSummary = getLastGameSummary(player.player_id);
 
             return {
-              number: player.jersey_number !== 999 ? player.jersey_number : '',
               name: player.name,
-              height: formatHeight(player.height),
+              number: player.shirt_number || '',
+              height: player.height || '-',
               age: age || '-',
-              birthDate: player.date_of_birth || '-',
-              gp: stats?.games_played || 0,
-              mpg: formatStat(stats?.min),
-              ppg: formatStat(stats?.pts),
+              birthDate: formatBirthDate(player.date_of_birth),
+              gp: formatStat(stats?.gp),
+              mpg: formatStat(stats?.mpg),
+              ppg: formatStat(stats?.ppg),
               fgm: formatStat(stats?.fgm),
               fga: formatStat(stats?.fga),
               fg_pct: formatPercentage(stats?.fg_pct),
@@ -398,6 +415,7 @@ export default function GameDayPDFPage() {
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       .no-print { display: none !important; }
+      html, body { overflow: hidden !important; }
     }
     body { 
       font-family: Arial, sans-serif; 
@@ -405,6 +423,7 @@ export default function GameDayPDFPage() {
       direction: rtl; 
       color: #000;
       background: #fff;
+      overflow: hidden;
     }
     .header { 
       text-align: center; 
@@ -424,50 +443,45 @@ export default function GameDayPDFPage() {
     }
     .team-section {
       margin-bottom: 2mm;
-      page-break-inside: avoid;
     }
-    .team-title {
-      font-size: 11pt;
-      font-weight: bold;
-      padding: 1.5mm;
-      margin-bottom: 1.5mm;
-      border: 1px solid #000;
+    .team-name {
       background: #d0d0d0;
-      color: #000;
+      padding: 1mm 2mm;
+      font-weight: bold;
+      font-size: 9.5pt;
+      border: 1px solid #000;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 1.5mm;
+      font-size: 7.5pt;
     }
     th {
       background: #b0b0b0;
-      padding: 1.5mm 0.8mm;
+      color: #000;
+      padding: 1mm 0.5mm;
       text-align: center;
       font-weight: bold;
       border: 1px solid #000;
-      font-size: 8.5pt;
+      font-size: 7.5pt;
     }
     td {
-      padding: 1.2mm 0.8mm;
+      padding: 0.8mm 0.5mm;
       text-align: center;
       border: 1px solid #808080;
-      font-size: 8pt;
-      vertical-align: top;
-      line-height: 1.35;
     }
     tr:nth-child(even) {
-      background: #f5f5f5;
+      background: #fafafa;
     }
     tr:nth-child(odd) {
       background: #fff;
     }
-    .number-col { width: 32px; font-weight: bold; }
-    .name-col { width: 100px; text-align: right; padding-right: 2mm; }
-    .height-col { width: 42px; }
-    .age-col { width: 32px; }
-    .birth-col { width: 85px; }
-    .history-col { text-align: right; padding-right: 1.8mm; font-size: 6.5pt; line-height: 1.45; }
+    .number-col { width: 20px; font-weight: bold; }
+    .name-col { width: 80px; text-align: right; padding-right: 2mm; font-weight: 500; }
+    .height-col { width: 35px; }
+    .age-col { width: 28px; }
+    .birth-col { width: 55px; }
+    .history-col { text-align: right; padding-right: 1.5mm; font-size: 6.5pt; }
   </style>
 </head>
 <body>
@@ -477,7 +491,7 @@ export default function GameDayPDFPage() {
   </div>
 
   <div class="team-section">
-    <div class="team-title">${game.home_team} (בית)</div>
+    <div class="team-name">${game.home_team} (בית)</div>
     <table>
       <thead>
         <tr>
@@ -505,7 +519,7 @@ export default function GameDayPDFPage() {
   </div>
 
   <div class="team-section">
-    <div class="team-title">${game.away_team} (חוץ)</div>
+    <div class="team-name">${game.away_team} (חוץ)</div>
     <table>
       <thead>
         <tr>
@@ -583,7 +597,7 @@ export default function GameDayPDFPage() {
         };
 
         return `
-<div class="page" style="page-break-after: ${isHome ? 'always' : 'auto'};">
+<div class="page">
   <div class="header">
     <h1>${teamName} (${isHome ? 'בית' : 'חוץ'})</h1>
     <p>${game.date ? new Date(game.date).toLocaleDateString('he-IL') : ''} | ${game.time || ''} | ${game.venue || game.arena || ''}</p>
@@ -659,86 +673,36 @@ export default function GameDayPDFPage() {
         const formatPct = (val) => val ? Math.round(Number(val)) : '-';
         const formatRank = (rank) => rank ? `#${rank}` : '-';
         
+        // חישוב נקודות חמישייה (סך כל שלשות * 3)
+        const threePts = teamAvg['3ptm'] ? Number(teamAvg['3ptm']) * 3 : 0;
+        
         return `
-        <tr style="background: #FFE082; font-weight: bold; border-top: 3px solid #000;">
-          <td class="num">-</td>
-          <td class="name">ממוצע קבוצה</td>
-          <td>-</td>
-          <td>-</td>
-          <td>${teamAvg.games_played || '-'}</td>
-          <td>-</td>
-          <td>${formatStat(teamAvg.pts)}</td>
-          <td>${formatStat(teamAvg.fgm)}/${formatStat(teamAvg.fga)}</td>
-          <td>${formatPct(teamAvg.fg_pct)}%</td>
-          <td>${formatStat(teamAvg['2ptm'])}/${formatStat(teamAvg['2pta'])}</td>
-          <td>${formatPct(teamAvg['2pt_pct'])}%</td>
-          <td>${formatStat(teamAvg['3ptm'])}/${formatStat(teamAvg['3pta'])}</td>
-          <td>${formatPct(teamAvg['3pt_pct'])}%</td>
-          <td>${formatStat(teamAvg.ftm)}/${formatStat(teamAvg.fta)}</td>
-          <td>${formatPct(teamAvg.ft_pct)}%</td>
-          <td>${formatStat(teamAvg.def)}</td>
-          <td>${formatStat(teamAvg.off)}</td>
-          <td>${formatStat(teamAvg.reb)}</td>
-          <td>${formatStat(teamAvg.ast)}</td>
-          <td>${formatStat(teamAvg.stl)}</td>
-          <td>${formatStat(teamAvg.blk)}</td>
-          <td>${formatStat(teamAvg.to)}</td>
-          <td>${formatStat(teamAvg.rate)}</td>
-          <td class="last" style="text-align: center;">ממוצע קבוצתי</td>
-        </tr>
-        <tr style="background: #FFF9C4; font-weight: bold; font-size: 6pt;">
-          <td class="num">-</td>
-          <td class="name">דירוג</td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>-</td>
-          <td>${formatRank(teamAvg.pts_rank)}</td>
-          <td>-</td>
-          <td>${formatRank(teamAvg.fg_pct_rank)}</td>
-          <td>-</td>
-          <td>${formatRank(teamAvg['2pt_pct_rank'])}</td>
-          <td>-</td>
-          <td>${formatRank(teamAvg['3pt_pct_rank'])}</td>
-          <td>-</td>
-          <td>${formatRank(teamAvg.ft_pct_rank)}</td>
-          <td>${formatRank(teamAvg.def_rank)}</td>
-          <td>${formatRank(teamAvg.off_rank)}</td>
-          <td>${formatRank(teamAvg.reb_rank)}</td>
-          <td>${formatRank(teamAvg.ast_rank)}</td>
-          <td>${formatRank(teamAvg.stl_rank)}</td>
-          <td>${formatRank(teamAvg.blk_rank)}</td>
-          <td>${formatRank(teamAvg.to_rank)}</td>
-          <td>${formatRank(teamAvg.rate_rank)}</td>
-          <td class="last" style="text-align: center;">דירוג בליגה</td>
+        <tr>
+          <td colspan="24" style="padding: 0;">
+            <div style="margin-top: 3mm; padding: 2mm; background: #f0f0f0; border: 1px solid #999; border-top: 2px solid #000;">
+              <div style="font-size: 8pt; line-height: 2.0; text-align: right; padding-right: 3mm;">
+                <strong style="font-size: 9pt; display: block; margin-bottom: 2mm;">ממוצע קבוצה:</strong>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm;">
+                  <span>• נק' ספיגה: <strong>${formatStat(teamAvg.pts_allowed)}</strong> (${formatRank(teamAvg.pts_allowed_rank)})</span>
+                  <span>• נק' מהזדמנות שנייה: <strong>${formatStat(teamAvg.second_chance_pts)}</strong></span>
+                  <span>• נק' מאיבודים: <strong>${formatStat(teamAvg.pts_off_turnovers)}</strong></span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 2mm; margin-top: 1mm;">
+                  <span>• נק' ממתפרצות: <strong>${formatStat(teamAvg.fast_break_pts)}</strong></span>
+                  <span>• נק' בצבע: <strong>${formatStat(teamAvg.points_in_paint)}</strong></span>
+                  <span>• נק' חמישייה: <strong>${threePts.toFixed(1)}</strong></span>
+                </div>
+                <div style="margin-top: 1mm;">
+                  <span>• נק' ספסל: <strong>${formatStat(teamAvg.bench_pts)}</strong></span>
+                </div>
+              </div>
+            </div>
+          </td>
         </tr>
         `;
       })()}
     </tbody>
   </table>
-  
-  ${(() => {
-    // מציאת הממוצעים הקבוצתיים לנתונים נוספים
-    const team = teams.find(t => t.team_name === teamName && t.league_id === game.league_id);
-    const teamAvg = teamAverages.find(ta => ta.team_id === team?.team_id && ta.league_id === game.league_id);
-    
-    if (!teamAvg) return '';
-    
-    const formatStat = (val) => val ? Number(val).toFixed(1) : '-';
-    const formatRank = (rank) => rank ? `#${rank}` : '-';
-    
-    return `
-    <div style="margin-top: 2mm; padding: 1.5mm; background: #f0f0f0; border: 1px solid #999; font-size: 5pt; line-height: 1.6;">
-      <strong style="font-size: 5.5pt;">נתונים נוספים:</strong>
-      <span style="margin: 0 3mm;">• נק' ספיגה: <strong>${formatStat(teamAvg.pts_allowed)}</strong> (${formatRank(teamAvg.pts_allowed_rank)})</span>
-      <span style="margin: 0 3mm;">• נק' מהזדמנות שנייה: <strong>${formatStat(teamAvg.second_chance_pts)}</strong></span>
-      <span style="margin: 0 3mm;">• נק' מאיבודים: <strong>${formatStat(teamAvg.pts_off_turnovers)}</strong></span>
-      <span style="margin: 0 3mm;">• נק' מהפסקות מהירות: <strong>${formatStat(teamAvg.fast_break_pts)}</strong></span>
-      <span style="margin: 0 3mm;">• נק' מהצבע: <strong>${formatStat(teamAvg.points_in_paint)}</strong></span>
-      <span style="margin: 0 3mm;">• נק' ספסל: <strong>${formatStat(teamAvg.bench_pts)}</strong></span>
-    </div>
-    `;
-  })()}
 </div>
         `;
       };
@@ -751,62 +715,68 @@ export default function GameDayPDFPage() {
   <title>${game.home_team} נגד ${game.away_team} - מורחב</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    @page { size: A4 landscape; margin: 6mm; }
+    @page { size: A4 landscape; margin: 8mm; }
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       .no-print { display: none !important; }
+      html, body { overflow: hidden !important; }
     }
     body { 
       font-family: Arial, sans-serif; 
-      font-size: 7pt; 
+      font-size: 9pt; 
       direction: rtl; 
       color: #000;
       background: #fff;
+      overflow: hidden;
     }
     .page {
-      min-height: 100vh;
+      height: 100vh;
       page-break-after: always;
       page-break-inside: avoid;
+      display: flex;
+      flex-direction: column;
     }
     .page:last-child {
       page-break-after: auto;
     }
     .header { 
       text-align: center; 
-      margin-bottom: 3mm; 
-      padding: 2mm;
+      margin-bottom: 4mm; 
+      padding: 3mm;
       border: 1px solid #000;
       background: #e0e0e0;
+      flex-shrink: 0;
     }
     .header h1 { 
-      font-size: 13pt; 
-      margin-bottom: 1mm;
+      font-size: 16pt; 
+      margin-bottom: 2mm;
       font-weight: bold;
     }
     .header p { 
-      font-size: 8pt;
+      font-size: 10pt;
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 7pt;
-      page-break-inside: avoid;
+      font-size: 9pt;
+      flex-grow: 1;
     }
     th {
       background: #b0b0b0;
       color: #000;
-      padding: 1.2mm 0.8mm;
+      padding: 2mm 1mm;
       text-align: center;
       font-weight: bold;
       border: 1px solid #000;
-      font-size: 7pt;
+      font-size: 9pt;
     }
     td {
-      padding: 1mm 0.6mm;
+      padding: 1.5mm 1mm;
       text-align: center;
       border: 1px solid #808080;
       vertical-align: middle;
-      line-height: 1.3;
+      line-height: 1.4;
+      font-size: 8.5pt;
     }
     tr:nth-child(even) {
       background: #fafafa;
@@ -814,12 +784,12 @@ export default function GameDayPDFPage() {
     tr:nth-child(odd) {
       background: #fff;
     }
-    .num { width: 22px; font-weight: bold; }
-    .name { width: 70px; text-align: right; padding-right: 2mm; font-weight: 500; }
-    .h { width: 35px; }
-    .age { width: 28px; }
-    .st { width: 35px; }
-    .last { width: 90px; text-align: right; padding-right: 1.5mm; font-size: 6pt; }
+    .num { width: 28px; font-weight: bold; font-size: 9pt; }
+    .name { width: 90px; text-align: right; padding-right: 3mm; font-weight: 500; font-size: 9pt; }
+    .h { width: 40px; }
+    .age { width: 32px; }
+    .st { width: 38px; }
+    .last { width: 110px; text-align: right; padding-right: 2mm; font-size: 7.5pt; }
   </style>
 </head>
 <body>
@@ -895,7 +865,7 @@ export default function GameDayPDFPage() {
   }
 
   return (
-    <div>
+    <div style={{ overflow: 'hidden' }}>
       <div className="no-print" style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 1000, background: 'white', padding: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', gap: '10px' }}>
         <Button onClick={() => navigate(-1)} variant="outline" size="sm">
           <ArrowLeft className="w-4 h-4 ml-2" />
