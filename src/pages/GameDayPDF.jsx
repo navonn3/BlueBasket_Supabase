@@ -380,6 +380,13 @@ export default function GameDayPDFPage() {
       }
 
       setPdfHtml(htmlContent);
+      
+      // פתיחת ה-HTML בחלון נפרד להדפסה
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
     }
@@ -894,19 +901,37 @@ export default function GameDayPDFPage() {
     );
   }
 
+  // אם ה-PDF נוצר, מציג הודעה
   return (
-    <div>
-      <div className="no-print" style={{ position: 'fixed', top: '10px', left: '10px', zIndex: 1000, background: 'white', padding: '10px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', display: 'flex', gap: '10px' }}>
-        <Button onClick={() => navigate(-1)} variant="outline" size="sm">
-          <ArrowLeft className="w-4 h-4 ml-2" />
-          חזרה
-        </Button>
-        <Button onClick={() => window.print()} size="sm" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
-          <Printer className="w-4 h-4 ml-2" />
-          הדפס
-        </Button>
+    <div className="p-6 min-h-screen flex items-center justify-center">
+      <div className="text-center">
+        <div className="mb-4">
+          <Printer className="w-16 h-16 mx-auto mb-4 text-green-600" />
+          <h2 className="text-xl font-bold mb-2">PDF נפתח בחלון חדש</h2>
+          <p className="text-gray-600 mb-4">
+            אם החלון לא נפתח, אנא אפשר חלונות קופצים (pop-ups) בדפדפן
+          </p>
+        </div>
+        <div className="flex gap-3 justify-center">
+          <Button onClick={() => navigate(createPageUrl("Games"))} variant="outline">
+            <ArrowLeft className="w-4 h-4 ml-2" />
+            חזרה למשחקים
+          </Button>
+          <Button 
+            onClick={() => {
+              const printWindow = window.open('', '_blank');
+              if (printWindow) {
+                printWindow.document.write(pdfHtml);
+                printWindow.document.close();
+              }
+            }}
+            style={{ backgroundColor: 'var(--accent)', color: 'white' }}
+          >
+            <Printer className="w-4 h-4 ml-2" />
+            פתח שוב
+          </Button>
+        </div>
       </div>
-      <div dangerouslySetInnerHTML={{ __html: pdfHtml }} />
     </div>
   );
 }
