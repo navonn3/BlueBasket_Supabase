@@ -765,6 +765,11 @@ export default function GameDayPDFPage() {
     }
     .page {
       min-height: 100vh;
+      page-break-after: always;
+      page-break-inside: avoid;
+    }
+    .page:last-child {
+      page-break-after: auto;
     }
     .header { 
       text-align: center; 
@@ -785,6 +790,7 @@ export default function GameDayPDFPage() {
       width: 100%;
       border-collapse: collapse;
       font-size: 5pt;
+      page-break-inside: avoid;
     }
     th {
       background: #b0b0b0;
