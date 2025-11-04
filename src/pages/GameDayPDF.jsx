@@ -728,13 +728,14 @@ export default function GameDayPDFPage() {
     const formatRank = (rank) => rank ? `#${rank}` : '-';
     
     return `
-    <div style="margin-top: 2mm; padding: 1.5mm; background: #f0f0f0; border: 1px solid #999; font-size: 5pt; line-height: 1.6;">
-      <strong style="font-size: 5.5pt;">נתונים נוספים:</strong>
+    <div style="margin-top: 2mm; padding: 1.5mm; background: #f0f0f0; border: 1px solid #999; font-size: 8pt; line-height: 2.5;">
+      <strong style="font-size: 8.5pt;">נתונים נוספים:</strong>
       <span style="margin: 0 3mm;">• נק' ספיגה: <strong>${formatStat(teamAvg.pts_allowed)}</strong> (${formatRank(teamAvg.pts_allowed_rank)})</span>
       <span style="margin: 0 3mm;">• נק' מהזדמנות שנייה: <strong>${formatStat(teamAvg.second_chance_pts)}</strong></span>
       <span style="margin: 0 3mm;">• נק' מאיבודים: <strong>${formatStat(teamAvg.pts_off_turnovers)}</strong></span>
-      <span style="margin: 0 3mm;">• נק' מהפסקות מהירות: <strong>${formatStat(teamAvg.fast_break_pts)}</strong></span>
-      <span style="margin: 0 3mm;">• נק' מהצבע: <strong>${formatStat(teamAvg.points_in_paint)}</strong></span>
+      <span style="margin: 0 3mm;">• נק' ממתפרצות: <strong>${formatStat(teamAvg.fast_break_pts)}</strong></span>
+      <span style="margin: 0 3mm;">• נק' בצבע: <strong>${formatStat(teamAvg.points_in_paint)}</strong></span>
+      <span style="margin: 0 3mm;">• נק' חמישייה: <strong>${formatStat(teamAvg.pts - teamAvg.bench_pts)}</strong></span>
       <span style="margin: 0 3mm;">• נק' ספסל: <strong>${formatStat(teamAvg.bench_pts)}</strong></span>
     </div>
     `;
@@ -758,7 +759,7 @@ export default function GameDayPDFPage() {
     }
     body { 
       font-family: Arial, sans-serif; 
-      font-size: 7pt; 
+      font-size: 9pt; 
       direction: rtl; 
       color: #000;
       background: #fff;
@@ -779,7 +780,7 @@ export default function GameDayPDFPage() {
       background: #e0e0e0;
     }
     .header h1 { 
-      font-size: 13pt; 
+      font-size: 11pt; 
       margin-bottom: 1mm;
       font-weight: bold;
     }
@@ -789,7 +790,7 @@ export default function GameDayPDFPage() {
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 7pt;
+      font-size: 8pt;
       page-break-inside: avoid;
     }
     th {
@@ -799,7 +800,7 @@ export default function GameDayPDFPage() {
       text-align: center;
       font-weight: bold;
       border: 1px solid #000;
-      font-size: 7pt;
+      font-size: 8pt;
     }
     td {
       padding: 1mm 0.6mm;
@@ -819,7 +820,7 @@ export default function GameDayPDFPage() {
     .h { width: 35px; }
     .age { width: 28px; }
     .st { width: 35px; }
-    .last { width: 90px; text-align: right; padding-right: 1.5mm; font-size: 6pt; }
+    .last { width: 90px; text-align: right; padding-right: 1.5mm; font-size: 7pt; }
   </style>
 </head>
 <body>
