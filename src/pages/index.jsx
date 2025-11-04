@@ -36,6 +36,8 @@ import GameScorersPage from "./GameScorersPage";
 
 import News from "./News";
 
+import UpcomingGames from "./UpcomingGames";
+
 import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
 
 const PAGES = {
@@ -76,6 +78,7 @@ const PAGES = {
 
     News: News,
 
+    UpcomingGames: UpcomingGames,
     
 }
 
@@ -139,6 +142,8 @@ function PagesContent() {
                 <Route path="/Home" element={<Home />} />
 
                 <Route path="/News" element={<News />} />
+
+                <Route path="/UpcomingGames" element={<UpcomingGames />} />
                 
             </Routes>
         </Layout>
